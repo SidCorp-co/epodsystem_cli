@@ -30,4 +30,4 @@ Verified via `list_liquid_objects`: storefront Liquid has NO `pages` object (a s
 - `sync-nav` maintains `docs-nav`: adds missing, de-dupes by `page_id`, labels generically by doc type.
 
 ## Home-page trap
-`/` is rendered by the **`index` template** (`templates/index.json`), NOT a `page_type=home` page (created but ignored). `epod-store-init home` sets `web-hero`+`docs-toc` on the index template via `set_section_settings template:"index"` and trims `index.json` to just those two (dropping default `web-feature-grid`/`web-cta`).
+`/` is rendered by the **`index` template** (`templates/index.json`), NOT a `page_type=home` page (created but ignored). `epod store home` sets `web-hero`+`docs-toc` on the index template via `set_section_settings template:"index"` and trims `index.json` to just those two (dropping default `web-feature-grid`/`web-cta`).

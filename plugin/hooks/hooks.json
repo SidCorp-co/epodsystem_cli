@@ -1,0 +1,16 @@
+{
+  "description": "Keep a single global `epod` command on PATH, pointing at this plugin's bundled CLI.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/link-cli.sh \"${CLAUDE_PLUGIN_ROOT}\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

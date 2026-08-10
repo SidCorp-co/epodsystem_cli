@@ -1,26 +1,49 @@
 # epod — Claude Code plugin for the epod documentation-site system
 
-A skill plus two CLIs for building documentation sites on epod (a Shopify-like CMS: pages
-made of `sections_data`, a Liquid theme, a runtime nav menu).
+One global command for building documentation sites on epod (a Shopify-like CMS: pages made
+of `sections_data`, a Liquid theme, a runtime nav menu), plus the skill that explains what
+`--help` cannot.
 
-- `epod` — pages and blocks: `context`, `list`, `build-doc` (.md → page), `sync-md`
-  (page → .md), `get-block` / `put-block`, `publish`, `get-theme` / `put-theme`,
-  `fix-mojibake`.
-- `epod-store-init` — whole-site bootstrap: `doctor`, `install` (upload the six bundled
-  sections), `sync-nav`, `home`, `verify <slug>`.
-- The `epod` skill — the part `--help` cannot tell you: runtime TOC/anchor generation, the
-  empty-store BLANK-render trap, the design-contract linter, why nav must be menu-driven,
-  and the markdown constructs that silently vanish.
+```sh
+epod context                     # which store am I on?
+epod list                        # pages (id/slug/status)
+epod build-doc file.md --slug x  # markdown → page, published
+epod sync-md 883 file.md         # page → markdown, the other direction
+epod store doctor                # is this store able to render a page at all?
+epod store install               # upload the six bundled sections
+epod store sync-nav              # rebuild the sidebar menu from published pages
+epod skill-root                  # where the skill's references/ and assets/ live
+```
 
-Nothing about a store, theme, domain, or page id is hard-coded. Everything is resolved live
-from the API, so one install serves every epod project on the machine.
+`epod --help` lists every page and theme command; `epod store --help` the site-bootstrap
+ones.
+
+## Global command, project-scoped credential
+
+The CLI is installed once for the machine, but it holds no credential of its own. Each epod
+project's `.mcp.json` carries its own store's token, and `epod` resolves one by walking up
+**from the current directory** — never from the script's own location. So the store you act
+on is always the checkout you are standing in, and six projects with six different tokens
+need no profiles, no login, and no duplicated secrets.
+
+Resolution order:
+
+1. `EPOD_TOKEN` in the environment, if set.
+2. The nearest `.mcp.json` at or above the cwd that has an `mcpServers.epodsystem` bearer
+   token. A `.mcp.json` without that server is skipped, not treated as a failure.
+3. Nothing else. Outside every epod checkout the command refuses and names the projects it
+   has resolved before (recorded, paths only, in `~/.config/epod/known-projects.json`) —
+   it never falls back to a default store, because publishing docs to the wrong company is
+   not a recoverable mistake.
+
+`EPOD_MCP_URL`, `EPOD_STORE_DOMAIN` and `EPOD_THEME_ID` override the endpoint, storefront
+domain and target theme when the context call cannot be trusted.
 
 ## Requirements
 
-- Python 3 with [`requests`](https://pypi.org/project/requests/) (the only dependency;
-  `md2doc` and the linter are stdlib-only)
-- A project holding an `.mcp.json` with an epodsystem token, or `EPOD_TOKEN` in the
-  environment
+- Python 3 with [`requests`](https://pypi.org/project/requests/) — the only dependency
+  (`md2doc` and the design linter are stdlib-only)
+- `~/.local/bin` on `PATH`
 
 ## Install
 
@@ -29,29 +52,26 @@ claude plugin marketplace add /run/media/thanh/New/ai-project/epod-plugin
 claude plugin install epod@epod-local
 ```
 
-Then link the two commands onto `PATH` — the skill calls them by bare name, because
-`${CLAUDE_PLUGIN_ROOT}` is substituted only in hook and MCP commands, not exported to the
-shell a skill runs in:
+That is the whole install. A `SessionStart` hook links `~/.local/bin/epod` to the bundled
+CLI on the next session — hooks are the one place `${CLAUDE_PLUGIN_ROOT}` is substituted,
+which is why the skill can call a bare command name at all. The hook is idempotent, silent
+unless it changes something, and refuses to touch `~/.local/bin/epod` if it is a real file
+rather than its own symlink. To skip the hook, link it yourself:
 
 ```sh
-ln -sf /run/media/thanh/New/ai-project/epod-plugin/plugin/bin/epod           ~/.local/bin/epod
-ln -sf /run/media/thanh/New/ai-project/epod-plugin/plugin/bin/epod-store-init ~/.local/bin/epod-store-init
-ln -sf /run/media/thanh/New/ai-project/epod-plugin/plugin/bin/epod-skill-root ~/.local/bin/epod-skill-root
+ln -sf /run/media/thanh/New/ai-project/epod-plugin/plugin/bin/epod ~/.local/bin/epod
 ```
 
-Link the checkout, not the install cache: `claude plugin install` from a `directory`
-marketplace points at this repo in place, but a cache path carries a version number that
-changes on every update. The wrappers resolve their own symlink, so they find the bundled
-scripts and `sections/*.liquid` wherever the checkout lives.
-
-`epod-skill-root` prints the skill directory; the skill uses it to read its own
-`references/*.md`.
+Link the checkout, not the plugin cache: `claude plugin install` from a `directory`
+marketplace points at this repo in place, whereas a cache path carries a version that
+changes on every update. The wrapper resolves its own symlink, so the bundled scripts and
+`sections/*.liquid` are found wherever the checkout lives.
 
 ## Verify
 
 ```sh
-epod-store-init doctor --local   # pre-lints the six bundled sections, no network
-epod context                     # needs a token: prints active org/store/theme id
+epod store doctor --local   # pre-lints the six bundled sections, no network, no token
+cd <an epod project> && epod context
 ```
 
 ## Layout
@@ -60,12 +80,15 @@ epod context                     # needs a token: prints active org/store/theme 
 .claude-plugin/marketplace.json   the epod-local marketplace
 plugin/
   .claude-plugin/plugin.json
-  bin/{epod,epod-store-init,epod-skill-root}
+  bin/epod                        the one command; resolves its own symlink
+  hooks/hooks.json                SessionStart → link-cli.sh
+  hooks/link-cli.sh               links ~/.local/bin/epod, idempotently
   skills/epod/
     SKILL.md                      workflow + traps
     references/internals.md       TOC/anchors, mermaid, color tokens, the index-template trap
     references/sections.md        the six sections and the linter's rules
-    scripts/epod.py               page/theme CLI + MCP client
+    scripts/cli.py                dispatch: page commands, `store`, `skill-root`
+    scripts/epod.py               page/theme CLI, MCP client, credential resolution
     scripts/store_init.py         store bootstrap + design-contract linter
     scripts/md2doc.py             markdown → doc blocks (imported by epod.py)
     assets/store-theme/sections/  the six Liquid sections

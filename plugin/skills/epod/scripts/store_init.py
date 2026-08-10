@@ -17,12 +17,12 @@ Nothing about store/theme/domain is hard-coded. Everything is resolved live from
 Section source: assets/store-theme/sections/*.liquid (bundled in the skill).
 
 Usage:
-  epod-store-init doctor [--local]   # pre-lint sections + diagnose store
-  epod-store-init check              # context + which sections are installed/missing
-  epod-store-init install [--force]  # install sections (pre-lints before upload)
-  epod-store-init sync-nav           # sync the docs-nav menu from published pages
-  epod-store-init home [--heading .. --eyebrow .. --subheading ..]  # set the home page
-  epod-store-init verify <slug>      # print live URL + warn on 404/blank-render
+  epod store doctor [--local]   # pre-lint sections + diagnose store
+  epod store check              # context + which sections are installed/missing
+  epod store install [--force]  # install sections (pre-lints before upload)
+  epod store sync-nav           # sync the docs-nav menu from published pages
+  epod store home [--heading .. --eyebrow .. --subheading ..]  # set the home page
+  epod store verify <slug>      # print live URL + warn on 404/blank-render
 
 Env overrides (multi-project):
   EPOD_TOKEN            bearer token (bypasses .mcp.json)
@@ -203,7 +203,7 @@ def cmd_doctor(e, args):
                 rc = 1
                 print(f"  ERROR {len(miss)} section(s) NOT installed in theme {theme_id}: "
                       f"{', '.join(miss)}")
-                print("        → pages will render BLANK. Run: epod-store-init install")
+                print("        → pages will render BLANK. Run: epod store install")
             else:
                 print(f"  OK    all sections present in theme {theme_id}")
             # does the docs-nav menu exist?
@@ -271,7 +271,7 @@ def cmd_install(e, args):
     print(json.dumps({"theme_id": theme_id, "results": results},
                      ensure_ascii=False, indent=2))
     print("\nNext: re-run build-doc (or publish) then verify:")
-    print(f"  epod-store-init verify <slug>")
+    print(f"  epod store verify <slug>")
 
 
 def cmd_verify(e, args):
@@ -297,7 +297,7 @@ def cmd_verify(e, args):
                        if t and not installed(e, f"sections/{t}.liquid", theme_id)]
             if missing:
                 print(f"  ERROR: theme is MISSING templates for section(s): {', '.join(missing)}")
-                print("         → page renders BLANK even when published. Run: epod-store-init install")
+                print("         → page renders BLANK even when published. Run: epod store install")
             else:
                 print(f"  OK: every section type on the page has a template in theme {theme_id}.")
     except SystemExit as ex:
@@ -557,7 +557,7 @@ def cmd_home(e, args):
 
 def main():
     ap = argparse.ArgumentParser(
-        prog="epod-store-init",
+        prog="epod store",
         description="Khởi tạo store epod: cài theme section cần cho doc pages. "
                     "Env-driven, không hard-code store/domain nào.",
         formatter_class=argparse.RawDescriptionHelpFormatter,

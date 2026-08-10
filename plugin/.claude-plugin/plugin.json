@@ -1,7 +1,7 @@
 {
   "name": "epod",
   "description": "Drive the epod documentation-site CMS and its theme sections from the terminal: page build/publish, .md ⇄ epod sync, store bootstrap, and a design-contract linter that rejects a bad section before the API does.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Thanh Nguyen",
     "email": "thanhnh@grytt.co"
