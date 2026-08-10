@@ -1,0 +1,60 @@
+<footer class="web-footer" data-section-name="web-footer" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}">
+  <div class="web-container wf-inner">
+    <div class="wf-brand-col">
+      <a class="wf-brand" href="/">
+        <span class="wf-mark">{{ section.settings.mark | default: 'DOC' }}</span>
+        <span class="wf-name">{{ section.settings.brand | default: shop.name }}</span>
+      </a>
+      {% if section.settings.tagline != blank %}<p class="wf-tagline">{{ section.settings.tagline }}</p>{% endif %}
+    </div>
+    <div class="wf-links-col">
+      {% if section.settings.links_title != blank %}<div class="wf-col-title">{{ section.settings.links_title }}</div>{% endif %}
+      <nav class="wf-links">
+        {% assign fm = linklists[section.settings.menu | default: 'main-menu'] %}{% for link in fm.links %}<a href="{{ link.url }}">{{ link.title }}</a>{% endfor %}
+      </nav>
+    </div>
+    <div class="wf-cred-col">
+      {% if section.settings.cred_title != blank %}<div class="wf-col-title">{{ section.settings.cred_title }}</div>{% endif %}
+      {% if section.settings.credit != blank %}<p class="wf-cred">{{ section.settings.credit }}</p>{% endif %}
+    </div>
+  </div>
+  <div class="web-container wf-bottom">
+    <p>{% if section.settings.copyright != blank %}{{ section.settings.copyright }}{% else %}&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. All rights reserved.{% endif %}</p>
+  </div>
+  <style>
+    [data-section-name="web-footer"]{background:var(--ink);color:rgba(255,255,255,.72);padding:40px 0 22px!important;margin-top:0!important}
+    [data-section-name="web-footer"] .wf-inner{display:grid;grid-template-columns:1.6fr 1fr 1.2fr;gap:40px;padding-bottom:26px}
+    [data-section-name="web-footer"] .wf-brand{display:flex;align-items:center;gap:11px;text-decoration:none;margin-bottom:12px}
+    [data-section-name="web-footer"] .wf-mark{width:34px;height:34px;border-radius:8px;background:var(--accent);color:var(--white,#fff);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:15px}
+    [data-section-name="web-footer"] .wf-name{font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--white,#fff)}
+    [data-section-name="web-footer"] .wf-tagline{margin:0;font-size:13.5px;line-height:1.6;max-width:280px;color:rgba(255,255,255,.6)}
+    [data-section-name="web-footer"] .wf-col-title{font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--white,#fff);margin-bottom:12px;letter-spacing:.3px}
+    [data-section-name="web-footer"] .wf-links{display:flex;flex-direction:column;gap:8px}
+    [data-section-name="web-footer"] .wf-links a{color:rgba(255,255,255,.72);text-decoration:none;font-size:14px;transition:color .15s}
+    [data-section-name="web-footer"] .wf-links a:hover{color:var(--white,#fff)}
+    [data-section-name="web-footer"] .wf-cred{margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.72)}
+    [data-section-name="web-footer"] .wf-bottom{border-top:1px solid rgba(255,255,255,.14);padding-top:18px}
+    [data-section-name="web-footer"] .wf-bottom p{margin:0;font-size:13px;color:rgba(255,255,255,.55)}
+    @media(max-width:768px){[data-section-name="web-footer"] .wf-inner{grid-template-columns:1fr;gap:26px}}
+  </style>
+</footer>
+{% schema %}{"name":"Footer","settings":[
+  {"type":"text","id":"brand","label":"Footer brand text","info":"Leave blank to use the store name.","default":""},
+  {"type":"text","id":"mark","label":"Monogram","default":"DOC"},
+  {"type":"textarea","id":"tagline","label":"Tagline","default":""},
+  {"type":"text","id":"links_title","label":"Links column title","default":"Documents"},
+  {"type":"menu","id":"menu","label":"Menu handle","default":"main-menu"},
+  {"type":"text","id":"cred_title","label":"Credit column title","default":""},
+  {"type":"textarea","id":"credit","label":"Credit text","default":""},
+  {"type":"text","id":"copyright","label":"Copyright line","info":"Leave blank for the default © year + store name.","default":""},
+  {"type":"header","label":"Style"},
+  {"type":"checkbox","id":"visible","label":"Visible","default":true},
+  {"type":"color","id":"bg_color","label":"Background color"},
+  {"type":"color","id":"text_color","label":"Text color"},
+  {"type":"color","id":"heading_color","label":"Heading color"},
+  {"type":"text","id":"padding_top","label":"Padding top (CSS)"},
+  {"type":"text","id":"padding_bottom","label":"Padding bottom (CSS)"},
+  {"type":"color","id":"border_color","label":"Border color"},
+  {"type":"range","id":"border_width","label":"Border width","min":0,"max":8,"step":1,"unit":"px","default":0},
+  {"type":"range","id":"border_radius","label":"Border radius","min":0,"max":48,"step":1,"unit":"px","default":0}
+]}{% endschema %}

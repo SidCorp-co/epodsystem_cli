@@ -1,0 +1,69 @@
+<header class="web-header" data-section-name="web-header" style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% endif %}">
+  <div class="web-container wh-inner">
+    <a class="wh-brand" href="/">
+      <span class="wh-mark">{{ section.settings.mark | default: 'DOC' }}</span>
+      <span class="wh-name">{{ section.settings.brand | default: shop.name }}</span>
+    </a>
+    <nav class="wh-nav">
+      {% assign mm = linklists[section.settings.menu | default: 'main-menu'] %}{% for link in mm.links %}<a href="{{ link.url }}">{{ link.title }}</a>{% endfor %}
+    </nav>
+    <button class="wh-burger" type="button" aria-label="Menu" data-drawer-open>
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="wh-drawer" data-drawer hidden>
+    <div class="wh-scrim" data-drawer-close></div>
+    <div class="wh-panel">
+      <button class="wh-close" type="button" aria-label="Close" data-drawer-close>&times;</button>
+      <nav class="wh-drawer-nav">
+        {% assign mm2 = linklists[section.settings.menu | default: 'main-menu'] %}{% for link in mm2.links %}<a href="{{ link.url }}">{{ link.title }}</a>{% endfor %}
+      </nav>
+    </div>
+  </div>
+  <style>
+    [data-section-name="web-header"]{position:sticky;top:0;z-index:100;background:var(--paper);border-bottom:1px solid var(--line);padding:0!important}
+    [data-section-name="web-header"] .wh-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;height:56px;padding-top:0;padding-bottom:0}
+    [data-section-name="web-header"] .wh-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    [data-section-name="web-header"] .wh-mark{width:32px;height:32px;border-radius:8px;background:var(--accent);color:var(--white,#fff);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:.5px}
+    [data-section-name="web-header"] .wh-name{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--ink)}
+    [data-section-name="web-header"] .wh-nav{display:flex;align-items:center;gap:24px}
+    [data-section-name="web-header"] .wh-nav a{text-decoration:none;color:var(--ink-2);font-weight:500;font-size:14.5px;transition:color .15s}
+    [data-section-name="web-header"] .wh-nav a:hover{color:var(--accent)}
+    [data-section-name="web-header"] .wh-burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px}
+    [data-section-name="web-header"] .wh-burger span{width:22px;height:2px;background:var(--ink);border-radius:2px}
+    [data-section-name="web-header"] .wh-drawer[hidden]{display:none}
+    [data-section-name="web-header"] .wh-drawer{position:fixed;inset:0;z-index:400}
+    [data-section-name="web-header"] .wh-scrim{position:absolute;inset:0;background:rgba(16,24,40,.42)}
+    [data-section-name="web-header"] .wh-panel{position:absolute;top:0;right:0;bottom:0;width:76%;max-width:320px;background:var(--paper);padding:60px 26px 26px;box-shadow:-8px 0 30px rgba(0,0,0,.15)}
+    [data-section-name="web-header"] .wh-close{position:absolute;top:14px;right:18px;background:none;border:none;font-size:30px;line-height:1;color:var(--ink);cursor:pointer}
+    [data-section-name="web-header"] .wh-drawer-nav{display:flex;flex-direction:column;gap:4px}
+    [data-section-name="web-header"] .wh-drawer-nav a{text-decoration:none;color:var(--ink);font-weight:500;font-size:17px;padding:12px 4px;border-bottom:1px solid var(--line)}
+    @media(max-width:768px){[data-section-name="web-header"] .wh-nav{display:none}[data-section-name="web-header"] .wh-burger{display:flex}}
+  </style>
+  <script>
+  (function(){
+    var root=document.currentScript.closest('[data-section-name="web-header"]');
+    if(!root)return;
+    var drawer=root.querySelector('[data-drawer]');
+    function open(){if(drawer)drawer.hidden=false;}
+    function close(){if(drawer)drawer.hidden=true;}
+    root.querySelectorAll('[data-drawer-open]').forEach(function(b){b.addEventListener('click',open);});
+    root.querySelectorAll('[data-drawer-close]').forEach(function(b){b.addEventListener('click',close);});
+  })();
+  </script>
+</header>
+{% schema %}{"name":"Header","settings":[
+  {"type":"text","id":"brand","label":"Brand / logo text","info":"Leave blank to use the store name.","default":""},
+  {"type":"text","id":"mark","label":"Monogram","default":"DOC"},
+  {"type":"menu","id":"menu","label":"Menu handle","default":"main-menu"},
+  {"type":"header","label":"Style"},
+  {"type":"checkbox","id":"visible","label":"Visible","default":true},
+  {"type":"color","id":"bg_color","label":"Background color"},
+  {"type":"color","id":"text_color","label":"Text color"},
+  {"type":"color","id":"heading_color","label":"Heading color"},
+  {"type":"text","id":"padding_top","label":"Padding top (CSS)"},
+  {"type":"text","id":"padding_bottom","label":"Padding bottom (CSS)"},
+  {"type":"color","id":"border_color","label":"Border color"},
+  {"type":"range","id":"border_width","label":"Border width","min":0,"max":8,"step":1,"unit":"px","default":0},
+  {"type":"range","id":"border_radius","label":"Border radius","min":0,"max":48,"step":1,"unit":"px","default":0}
+]}{% endschema %}

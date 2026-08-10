@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Prints the skill directory holding SKILL.md, references/, scripts/ and assets/.
+SK="$(dirname "$(dirname "$(readlink -f "$0")")")/skills/epod"
+echo "$SK"

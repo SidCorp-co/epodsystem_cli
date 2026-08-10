@@ -1,0 +1,22 @@
+{
+  "name": "epod-local",
+  "owner": {
+    "name": "Thanh Nguyen",
+    "email": "thanhnh@grytt.co"
+  },
+  "metadata": {
+    "description": "Local marketplace hosting the epod documentation-site plugin"
+  },
+  "plugins": [
+    {
+      "name": "epod",
+      "description": "Drive the epod documentation-site CMS and its theme sections from the terminal: page build/publish, .md ⇄ epod sync, store bootstrap, and a design-contract linter that rejects a bad section before the API does.",
+      "author": {
+        "name": "Thanh Nguyen",
+        "email": "thanhnh@grytt.co"
+      },
+      "category": "development",
+      "source": "./plugin"
+    }
+  ]
+}

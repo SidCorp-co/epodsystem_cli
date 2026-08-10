@@ -1,0 +1,49 @@
+<style>
+:root{
+  --accent:#2f6df6;
+  --accent-2:#1a2b4a;
+  --accent-soft:#e8effe;
+  --ink:#1a2233;
+  --ink-2:#3d4a63;
+  --mute:#6b7488;
+  --paper:#ffffff;
+  --cream:#f5f7fb;
+  --line:#dde2ec;
+  --white:#ffffff;
+  --radius-lg:8px;
+  --font-display:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+</style>
+<section class="web-hero" data-section-name="web-hero"{% if section.settings.visible == false %} hidden{% endif %} style="background:var(--cream);{% if section.settings.padding_top != blank %}padding-top:{{ section.settings.padding_top }};{% endif %}{% if section.settings.padding_bottom != blank %}padding-bottom:{{ section.settings.padding_bottom }};{% endif %}">
+  <div class="web-container wh2-inner" style="max-width:820px;margin:0 auto;text-align:center;">
+    {% if section.settings.eyebrow != blank %}<div class="wh2-eyebrow">{{ section.settings.eyebrow }}</div>{% endif %}
+    <h1 class="wh2-h1">{{ section.settings.heading | default: shop.name }}</h1>
+    {% if section.settings.subheading != blank %}<p class="wh2-sub">{{ section.settings.subheading }}</p>{% endif %}
+    {% if section.settings.cta_label != blank %}<a class="wh2-cta" href="{{ section.settings.cta_url | default: '#' }}">{{ section.settings.cta_label }}</a>{% endif %}
+  </div>
+  <style>
+    [data-section-name="web-hero"]{padding:56px 0 48px;margin:0}
+    [data-section-name="web-hero"] .wh2-eyebrow{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:16px}
+    [data-section-name="web-hero"] .wh2-h1{font-family:var(--font-display);font-size:clamp(30px,5vw,48px);line-height:1.12;margin:0 0 16px;color:var(--ink);font-weight:800}
+    [data-section-name="web-hero"] .wh2-sub{font-size:17px;line-height:1.6;color:var(--ink-2);margin:0 auto 28px;max-width:60ch}
+    [data-section-name="web-hero"] .wh2-cta{display:inline-block;background:var(--accent);color:var(--white,#fff);text-decoration:none;font-weight:600;font-size:15px;padding:12px 26px;border-radius:8px;transition:transform .12s,filter .12s}
+    [data-section-name="web-hero"] .wh2-cta:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  </style>
+</section>
+{% schema %}{"name":"Web Hero","category":"Docs","presets":[{"name":"Web Hero"}],"settings":[
+  {"type":"text","id":"eyebrow","label":"Eyebrow","default":""},
+  {"type":"text","id":"heading","label":"Heading","default":"Documentation"},
+  {"type":"textarea","id":"subheading","label":"Subheading","default":""},
+  {"type":"text","id":"cta_label","label":"CTA label","default":""},
+  {"type":"url","id":"cta_url","label":"CTA link"},
+  {"type":"header","label":"Style"},
+  {"type":"checkbox","id":"visible","label":"Visible","default":true},
+  {"type":"color","id":"bg_color","label":"Background color"},
+  {"type":"color","id":"text_color","label":"Text color"},
+  {"type":"color","id":"heading_color","label":"Heading color"},
+  {"type":"text","id":"padding_top","label":"Padding top (CSS)"},
+  {"type":"text","id":"padding_bottom","label":"Padding bottom (CSS)"},
+  {"type":"color","id":"border_color","label":"Border color"},
+  {"type":"range","id":"border_width","label":"Border width","min":0,"max":8,"step":1,"unit":"px","default":0},
+  {"type":"range","id":"border_radius","label":"Border radius","min":0,"max":48,"step":1,"unit":"px","default":0}
+]}{% endschema %}

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# $0 is the ~/.local/bin symlink, so resolve it before locating the bundled scripts.
+SK="$(dirname "$(dirname "$(readlink -f "$0")")")/skills/epod"
+exec python3 "$SK/scripts/epod.py" "$@"

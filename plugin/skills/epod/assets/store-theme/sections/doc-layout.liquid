@@ -1,0 +1,240 @@
+<section class="doc-layout" data-section-name="doc-layout"{% if section.settings.visible == false %} hidden{% endif %} style="{% if section.settings.bg_color != blank %}background:{{ section.settings.bg_color }};{% else %}background:var(--cream);{% endif %}">
+  <div class="dl-grid">
+    <aside class="dl-left">
+      <div class="dl-left-inner">
+        <div class="dl-eyebrow">{{ section.settings.nav_title | default: 'Project docs' }}</div>
+        <nav class="dl-docnav">
+          {%- comment -%}
+            Nav is DYNAMIC from a menu (linklists) so adding a page = one menu item,
+            zero edits to existing pages. Current = link url matches request.path.
+            Falls back to navitem blocks if the menu is empty/missing (stores without a menu).
+          {%- endcomment -%}
+          {%- assign nav_menu = linklists[section.settings.menu | default: 'docs-nav'] -%}
+          {%- if nav_menu and nav_menu.links.size > 0 -%}
+            {%- for link in nav_menu.links -%}<a href="{{ link.url }}" class="dl-menu-link{% if link.url == request.path %} current{% endif %}">{{ link.title }}</a>{%- endfor -%}
+          {%- else -%}
+            {%- for block in section.blocks -%}{%- if block.type == 'navitem' -%}<a href="{{ block.settings.url | default: '#' }}" class="{% if block.settings.current %}current{% endif %}"><span class="dl-doc-tag">{{ block.settings.tag }}</span>{{ block.settings.label }}</a>{%- endif -%}{%- endfor -%}
+          {%- endif -%}
+        </nav>
+      </div>
+    </aside>
+
+    <main class="dl-center">
+      {% for block in section.blocks %}{% if block.type == 'doc' %}
+        <article class="dl-article" id="sec-{{ forloop.index }}" data-doc-title="{{ block.settings.title | escape }}" {{ block.shopify_attributes }}>
+          <header class="dl-art-head">
+            {% if block.settings.num != blank %}<span class="dl-art-num">{{ block.settings.num }}</span>{% endif %}
+            <h2 class="dl-art-title">{{ block.settings.title }}</h2>
+          </header>
+          <div class="dl-art-body">{{ block.settings.body }}</div>
+        </article>
+      {% endif %}{% endfor %}
+    </main>
+
+    <aside class="dl-right">
+      <div class="dl-right-inner">
+        <div class="dl-eyebrow">{{ section.settings.toc_title | default: 'On this page' }}</div>
+        <nav class="dl-toc"></nav>
+      </div>
+    </aside>
+  </div>
+
+  <style>
+    :root{
+      --accent:#2f6df6;
+      --accent-2:#1a2b4a;
+      --accent-soft:#e8effe;
+      --ink:#1a2233;
+      --ink-2:#3d4a63;
+      --mute:#6b7488;
+      --paper:#ffffff;
+      --cream:#f5f7fb;
+      --line:#dde2ec;
+      --white:#ffffff;
+      --radius-lg:8px;
+      --font-display:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    }
+    [data-section-name="doc-layout"]{display:block}
+    [data-section-name="doc-layout"] .dl-grid{width:100%;margin:0 auto;padding:32px clamp(24px,3.5vw,64px) 72px;display:grid;grid-template-columns:260px minmax(0,1fr) 260px;gap:clamp(32px,3vw,56px);align-items:stretch}
+    [data-section-name="doc-layout"] .dl-eyebrow{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:14px}
+    [data-section-name="doc-layout"] .dl-left,[data-section-name="doc-layout"] .dl-right{position:relative}
+    [data-section-name="doc-layout"] .dl-left-inner,[data-section-name="doc-layout"] .dl-right-inner{position:sticky;top:72px;max-height:calc(100vh - 96px);overflow-y:auto}
+    [data-section-name="doc-layout"] .dl-docnav{display:flex;flex-direction:column;gap:3px}
+    [data-section-name="doc-layout"] .dl-docnav a{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:9px 12px;border-radius:8px;line-height:1.3;transition:background .12s,color .12s}
+    [data-section-name="doc-layout"] .dl-docnav a:hover{background:var(--accent-soft);color:var(--accent)}
+    [data-section-name="doc-layout"] .dl-docnav a.current{background:var(--accent);color:var(--white,#fff)}
+    [data-section-name="doc-layout"] .dl-docnav a.current .dl-doc-tag{background:rgba(255,255,255,.24);color:var(--white,#fff)}
+    [data-section-name="doc-layout"] .dl-doc-tag{flex:0 0 auto;min-width:38px;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;background:var(--paper);border:1px solid var(--line);color:var(--accent);padding:2px 6px;border-radius:5px}
+    [data-section-name="doc-layout"] .dl-docnav a.dl-menu-link{display:block}
+    [data-section-name="doc-layout"] .dl-center{min-width:0;display:flex;flex-direction:column;gap:22px}
+    [data-section-name="doc-layout"] .dl-article{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px clamp(30px,2.6vw,48px) 32px;scroll-margin-top:76px;box-shadow:0 1px 3px rgba(22,37,68,.05)}
+    [data-section-name="doc-layout"] .dl-art-head{display:flex;align-items:center;gap:13px;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid var(--accent-soft)}
+    [data-section-name="doc-layout"] .dl-art-num{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:var(--accent);color:var(--white,#fff);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px}
+    [data-section-name="doc-layout"] .dl-art-title{font-family:var(--font-display);font-size:clamp(19px,2.2vw,24px);margin:0;color:var(--ink);text-align:left;line-height:1.2}
+    [data-section-name="doc-layout"] .dl-art-body{color:var(--ink-2);line-height:1.7;font-size:15px}
+    [data-section-name="doc-layout"] .dl-art-body>*:first-child{margin-top:0}
+    [data-section-name="doc-layout"] .dl-art-body>*:last-child{margin-bottom:0}
+    [data-section-name="doc-layout"] .dl-art-body h3{color:var(--ink);font-size:16.5px;margin:24px 0 10px;font-weight:700;text-align:left;scroll-margin-top:76px}
+    [data-section-name="doc-layout"] .dl-art-body h4{color:var(--accent);font-size:14.5px;margin:20px 0 10px;font-weight:600;text-align:left;scroll-margin-top:76px}
+    [data-section-name="doc-layout"] .dl-art-body h3:first-child,[data-section-name="doc-layout"] .dl-art-body h4:first-child{margin-top:0}
+    [data-section-name="doc-layout"] .dl-art-body p{margin:0 0 12px}
+    [data-section-name="doc-layout"] .dl-art-body a{color:var(--accent);font-style:italic;text-decoration:none;transition:color .12s}
+    [data-section-name="doc-layout"] .dl-art-body a:hover{text-decoration:underline}
+    [data-section-name="doc-layout"] .dl-art-body ul,[data-section-name="doc-layout"] .dl-art-body ol{margin:0 0 14px;padding-left:20px}
+    [data-section-name="doc-layout"] .dl-art-body li{margin:0 0 6px}
+    [data-section-name="doc-layout"] .dl-art-body table{width:100%;border-collapse:collapse;margin:10px 0 4px;font-size:13.5px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+    [data-section-name="doc-layout"] .dl-art-body thead th{background:var(--accent);color:var(--white,#fff);text-align:left;padding:9px 11px;font-weight:600;font-size:12.5px}
+    [data-section-name="doc-layout"] .dl-art-body td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top;background:transparent}
+    [data-section-name="doc-layout"] .dl-art-body tbody tr:nth-child(even) td{background:var(--cream)}
+    [data-section-name="doc-layout"] .dl-art-body tbody tr:last-child td{border-bottom:none}
+    [data-section-name="doc-layout"] .dl-art-body strong{color:var(--ink)}
+    [data-section-name="doc-layout"] .dl-art-body code{background:var(--cream);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:13px}
+    [data-section-name="doc-layout"] .dl-art-body pre{background:var(--ink);color:var(--paper);padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;margin:0 0 14px}
+    [data-section-name="doc-layout"] .dl-art-body pre code{background:none;border:none;padding:0;color:inherit}
+    /* Diagram: sơ đồ khối HTML/CSS (thay ASCII) */
+    [data-section-name="doc-layout"] .dl-diagram{display:flex;flex-wrap:wrap;align-items:stretch;gap:14px;margin:6px 0 16px;padding:18px;background:var(--cream);border:1px solid var(--line);border-radius:12px}
+    [data-section-name="doc-layout"] .dl-diagram .dg-col{flex:1 1 200px;min-width:180px;display:flex;flex-direction:column;gap:10px}
+    [data-section-name="doc-layout"] .dl-diagram .dg-colhead{font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:700;color:var(--mute);text-align:center}
+    [data-section-name="doc-layout"] .dl-diagram .dg-node{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.35;box-shadow:0 1px 2px rgba(22,37,68,.05)}
+    [data-section-name="doc-layout"] .dl-diagram .dg-node b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:2px}
+    [data-section-name="doc-layout"] .dl-diagram .dg-node small{color:var(--mute);font-size:11.5px}
+    [data-section-name="doc-layout"] .dl-diagram .dg-accent{border-color:var(--accent);border-left:3px solid var(--accent)}
+    [data-section-name="doc-layout"] .dl-diagram .dg-arrow{align-self:center;flex:0 0 auto;color:var(--accent);font-weight:700;font-size:18px;display:flex;flex-direction:column;align-items:center;gap:2px}
+    [data-section-name="doc-layout"] .dl-diagram .dg-arrow small{font-size:10px;color:var(--mute);font-weight:600;letter-spacing:.4px}
+    @media(max-width:640px){[data-section-name="doc-layout"] .dl-diagram .dg-arrow{transform:rotate(90deg);margin:2px 0}}
+    /* Diagram mermaid: cùng khung thẻ như .dl-diagram; render trước khi hiện để tránh nháy text */
+    [data-section-name="doc-layout"] .dl-art-body pre.mermaid{background:var(--cream);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:18px;margin:6px 0 16px;overflow-x:auto;text-align:center;font-family:inherit;font-size:13px;line-height:1.4}
+    [data-section-name="doc-layout"] .dl-art-body pre.mermaid:not([data-processed]){visibility:hidden;min-height:60px}
+    [data-section-name="doc-layout"] .dl-art-body pre.mermaid[data-processed] svg{max-width:100%;height:auto}
+    [data-section-name="doc-layout"] .dl-toc{display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line);padding-left:2px}
+    [data-section-name="doc-layout"] .dl-toc a{text-decoration:none;color:var(--mute);font-size:12.5px;line-height:1.35;padding:5px 12px;border-left:2px solid transparent;margin-left:-2px;transition:color .12s,border-color .12s}
+    [data-section-name="doc-layout"] .dl-toc a:hover{color:var(--accent)}
+    [data-section-name="doc-layout"] .dl-toc a.active{color:var(--accent);border-left-color:var(--accent);font-weight:600}
+    [data-section-name="doc-layout"] .dl-toc a.lvl-h2{font-weight:600;color:var(--ink-2);margin-top:4px}
+    [data-section-name="doc-layout"] .dl-toc a.lvl-h3{padding-left:24px;font-size:12px}
+    [data-section-name="doc-layout"] .dl-toc a.lvl-h4{padding-left:36px;font-size:11.5px;color:var(--mute)}
+    @media(max-width:1240px){[data-section-name="doc-layout"] .dl-grid{grid-template-columns:230px minmax(0,1fr) 230px;gap:36px}}
+    @media(max-width:1080px){[data-section-name="doc-layout"] .dl-grid{grid-template-columns:220px minmax(0,1fr);gap:32px}[data-section-name="doc-layout"] .dl-right{display:none}}
+    @media(max-width:800px){[data-section-name="doc-layout"] .dl-grid{grid-template-columns:1fr;gap:16px;padding:20px 16px 48px}[data-section-name="doc-layout"] .dl-left{display:none}[data-section-name="doc-layout"] .dl-article{padding:22px 20px}[data-section-name="doc-layout"] .dl-art-body table{display:block;width:100%;overflow-x:auto;white-space:nowrap}}
+  </style>
+
+  <script>
+  (function(){
+    var root=document.currentScript.closest('[data-section-name="doc-layout"]');
+    if(!root)return;
+    var toc=root.querySelector('.dl-toc');
+    var heads=[];
+    function slugify(s){return s.toLowerCase().replace(/[^a-z0-9À-ỹ]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);}
+    // Gán id block (article) từ TIÊU ĐỀ (ổn định, không phụ thuộc vị trí). Giữ id sec-N cũ làm alias để link cũ không vỡ.
+    var used={};
+    root.querySelectorAll('.dl-article').forEach(function(art){
+      var legacy=art.id; // sec-N
+      var title=art.getAttribute('data-doc-title')||(art.querySelector('.dl-art-title')||{}).textContent||'';
+      var base=slugify(title)||legacy;
+      var id=base,i=2;while(used[id]||(document.getElementById(id)&&document.getElementById(id)!==art)){id=base+'-'+i++;}
+      used[id]=1;
+      art.id=id;
+      if(legacy&&legacy!==id){ // alias sec-N -> vẫn scroll được
+        var a=document.createElement('span');a.id=legacy;a.className='dl-anchor-alias';
+        a.style.position='absolute';a.style.height='0';a.style.scrollMarginTop='76px';
+        art.insertBefore(a,art.firstChild);
+      }
+      var h2=art.querySelector('.dl-art-title');
+      if(h2){heads.push({el:art,id:art.id,text:h2.textContent.trim(),lvl:'h2'});}
+      art.querySelectorAll('.dl-art-body h3, .dl-art-body h4').forEach(function(h){
+        if(!h.id){var hb=art.id+'-'+slugify(h.textContent);var hid=hb,j=2;while(document.getElementById(hid)){hid=hb+'-'+j++;}h.id=hid;}
+        heads.push({el:h,id:h.id,text:h.textContent.trim(),lvl:h.tagName.toLowerCase()});
+      });
+    });
+    heads.forEach(function(h){
+      var a=document.createElement('a');
+      a.href='#'+h.id;a.textContent=h.text;a.className='lvl-'+h.lvl;
+      a.setAttribute('data-toc-link',h.id);
+      toc.appendChild(a);
+    });
+    var tocLinks=toc.querySelectorAll('[data-toc-link]');
+    function setActive(id){tocLinks.forEach(function(a){a.classList.toggle('active',a.getAttribute('data-toc-link')===id);});}
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(e){if(e.isIntersecting)setActive(e.target.id);});
+      },{rootMargin:'-80px 0px -70% 0px',threshold:0});
+      heads.forEach(function(h){io.observe(h.el);});
+    }
+    root.querySelectorAll('a[href^="#"]').forEach(function(a){
+      var href=a.getAttribute('href');
+      if(href.length<2)return;
+      a.addEventListener('click',function(ev){
+        var t=document.getElementById(href.slice(1));
+        if(t){ev.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});history.replaceState(null,'',href);}
+      });
+    });
+    // Cross-page: id gán bằng JS nên hash lúc tải trang chưa scroll đúng -> tự cuộn lại.
+    if(location.hash&&location.hash.length>1){
+      var target=document.getElementById(location.hash.slice(1));
+      if(target){setTimeout(function(){target.scrollIntoView({block:'start'});},60);}
+    }
+    // Mermaid: chỉ nạp từ CDN khi trang có <pre class="mermaid">. Màu theo token theme.
+    var mnodes=root.querySelectorAll('pre.mermaid');
+    if(mnodes.length){
+      var css=getComputedStyle(document.documentElement);
+      var accent=(css.getPropertyValue('--accent')||'#0e46d8').trim();
+      var ink=(css.getPropertyValue('--ink')||'#162544').trim();
+      var paper=(css.getPropertyValue('--paper')||'#ffffff').trim();
+      var line=(css.getPropertyValue('--line')||'#d7dceb').trim();
+      var s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      s.onload=function(){
+        try{
+          window.mermaid.initialize({
+            startOnLoad:false,
+            securityLevel:'loose',
+            fontFamily:'inherit',
+            theme:'base',
+            themeVariables:{
+              primaryColor:paper,primaryTextColor:ink,primaryBorderColor:accent,
+              lineColor:accent,secondaryColor:'#eef1fb',tertiaryColor:paper,
+              clusterBkg:'#eef1fb',clusterBorder:line,
+              edgeLabelBackground:paper,fontSize:'13px'
+            }
+          });
+          window.mermaid.run({nodes:mnodes});
+        }catch(e){/* để nguyên text nếu lỗi */ mnodes.forEach(function(n){n.style.visibility='visible';});}
+      };
+      s.onerror=function(){mnodes.forEach(function(n){n.style.visibility='visible';});};
+      document.head.appendChild(s);
+    }
+  })();
+  </script>
+</section>
+{% schema %}
+{"name":"Doc Layout","category":"Docs","max_blocks":50,
+"settings":[
+  {"type":"text","id":"nav_title","label":"Left nav title","default":"Project docs"},
+  {"type":"text","id":"toc_title","label":"Right TOC title","default":"On this page"},
+  {"type":"menu","id":"menu","label":"Sidebar menu handle","info":"Left sidebar auto-lists this menu's items (runtime). Use a docs-only menu (e.g. docs-nav), NOT the header main-menu. Falls back to navitem blocks if empty.","default":"docs-nav"},
+  {"type":"header","label":"Style"},
+  {"type":"checkbox","id":"visible","label":"Visible","default":true},
+  {"type":"color","id":"bg_color","label":"Background color"},
+  {"type":"color","id":"text_color","label":"Text color"},
+  {"type":"color","id":"heading_color","label":"Heading color"},
+  {"type":"text","id":"padding_top","label":"Padding top (CSS)"},
+  {"type":"text","id":"padding_bottom","label":"Padding bottom (CSS)"},
+  {"type":"color","id":"border_color","label":"Border color"},
+  {"type":"range","id":"border_width","label":"Border width","min":0,"max":8,"step":1,"unit":"px","default":0},
+  {"type":"range","id":"border_radius","label":"Border radius","min":0,"max":48,"step":1,"unit":"px","default":0}
+],
+"blocks":[
+  {"type":"navitem","name":"Nav item (left)","settings":[
+    {"type":"text","id":"tag","label":"Tag","default":"BRD"},
+    {"type":"text","id":"label","label":"Label","default":"Document name"},
+    {"type":"url","id":"url","label":"Link"},
+    {"type":"checkbox","id":"current","label":"Current (highlight)","default":false}
+  ]},
+  {"type":"doc","name":"Content section","settings":[
+    {"type":"text","id":"num","label":"Number","default":"1"},
+    {"type":"text","id":"title","label":"Title","default":"Section"},
+    {"type":"richtext","id":"body","label":"Body (HTML)","default":"<p>Content.</p>"}
+  ]}
+],
+"presets":[{"name":"Doc Layout","blocks":[{"type":"navitem"},{"type":"doc"}]}]}
+{% endschema %}

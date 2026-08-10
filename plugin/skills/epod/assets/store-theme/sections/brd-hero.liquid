@@ -1,0 +1,64 @@
+<style>
+:root{
+  --accent:#2f6df6;
+  --accent-2:#1a2b4a;
+  --accent-soft:#e8effe;
+  --ink:#1a2233;
+  --ink-2:#3d4a63;
+  --mute:#6b7488;
+  --paper:#ffffff;
+  --cream:#f5f7fb;
+  --line:#dde2ec;
+  --white:#ffffff;
+  --radius-lg:8px;
+  --font-display:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+</style>
+<section class="brd-hero" data-section-name="brd-hero"{% if section.settings.visible == false %} hidden{% endif %} style="background:var(--accent);color:var(--white,#fff);padding:72px 0 64px;{% if section.settings.padding_top != blank %}padding-top:{{ section.settings.padding_top }};{% endif %}{% if section.settings.padding_bottom != blank %}padding-bottom:{{ section.settings.padding_bottom }};{% endif %}">
+  <div class="web-container" style="max-width:900px;margin:0 auto;text-align:center;">
+    {% if section.settings.logo != blank %}<img class="bh-logo" src="{{ section.settings.logo }}" alt="{{ section.settings.mark | default: 'DOC' }}">{% else %}<div class="bh-mark">{{ section.settings.mark | default: 'DOC' }}</div>{% endif %}
+    {% if section.settings.doc_type != blank %}<div class="bh-type">{{ section.settings.doc_type }}</div>{% endif %}
+    <h1 class="bh-h1">{{ section.settings.heading }}</h1>
+    {% if section.settings.subheading != blank %}<p class="bh-sub">{{ section.settings.subheading }}</p>{% endif %}
+    <div class="bh-chips">
+      {% if section.settings.chip1 != blank %}<span>{{ section.settings.chip1 }}</span>{% endif %}
+      {% if section.settings.chip2 != blank %}<span>{{ section.settings.chip2 }}</span>{% endif %}
+      {% if section.settings.chip3 != blank %}<span>{{ section.settings.chip3 }}</span>{% endif %}
+    </div>
+    {% if section.settings.note != blank %}<div class="bh-note">{{ section.settings.note }}</div>{% endif %}
+  </div>
+  <style>
+    [data-section-name="brd-hero"] .bh-logo{height:52px;width:auto;margin-bottom:26px;object-fit:contain}
+    [data-section-name="brd-hero"] .bh-mark{width:66px;height:66px;margin:0 auto 24px;border-radius:16px;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:28px;letter-spacing:1px;color:var(--accent)}
+    [data-section-name="brd-hero"] .bh-type{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:600;margin-bottom:14px}
+    [data-section-name="brd-hero"] .bh-h1{font-family:var(--font-display);font-size:clamp(30px,5vw,50px);line-height:1.1;margin:0 0 14px;color:var(--white,#fff);font-weight:700}
+    [data-section-name="brd-hero"] .bh-sub{font-size:17px;color:rgba(255,255,255,.78);margin:0 0 26px}
+    [data-section-name="brd-hero"] .bh-chips{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:22px}
+    [data-section-name="brd-hero"] .bh-chips span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:7px 16px;border-radius:22px;font-size:13.5px;color:var(--white,#fff)}
+    [data-section-name="brd-hero"] .bh-note{display:inline-block;background:var(--white,#fff);color:hsl(38,100%,27%);border:1px solid rgba(255,255,255,.4);padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;margin-top:4px}
+  </style>
+</section>
+
+{% schema %}
+{"category":"Docs","name":"Doc Hero","presets":[{"name":"Doc Hero"}],"settings":[
+{"type":"text","id":"logo","label":"Logo URL (blank = text mark)"},
+{"type":"text","id":"mark","label":"Text mark","default":"DOC"},
+{"type":"text","id":"doc_type","label":"Document type","default":"BUSINESS REQUIREMENTS DOCUMENT"},
+{"type":"text","id":"heading","label":"Heading","default":"Document title"},
+{"type":"text","id":"subheading","label":"Subheading","default":"Subtitle goes here"},
+{"type":"text","id":"chip1","label":"Chip 1","default":""},
+{"type":"text","id":"chip2","label":"Chip 2","default":""},
+{"type":"text","id":"chip3","label":"Chip 3","default":"Version 0.1 — Draft"},
+{"type":"text","id":"note","label":"Scope note","default":""},
+{"type":"header","label":"Style"},
+{"type":"checkbox","id":"visible","label":"Visible","default":true},
+{"type":"color","id":"bg_color","label":"Background color"},
+{"type":"color","id":"text_color","label":"Text color"},
+{"type":"color","id":"heading_color","label":"Heading color"},
+{"type":"text","id":"padding_top","label":"Padding top (CSS)"},
+{"type":"text","id":"padding_bottom","label":"Padding bottom (CSS)"},
+{"type":"color","id":"border_color","label":"Border color"},
+{"type":"range","id":"border_width","label":"Border width","default":0,"min":0,"max":8,"step":1,"unit":"px"},
+{"type":"range","id":"border_radius","label":"Border radius","default":0,"min":0,"max":48,"step":1,"unit":"px"}
+]}
+{% endschema %}
