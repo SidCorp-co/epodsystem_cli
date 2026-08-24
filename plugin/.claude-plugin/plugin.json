@@ -6,5 +6,14 @@
     "name": "Thanh Nguyen",
     "email": "thanhnh@grytt.co"
   },
-  "keywords": ["epod", "docs", "cms", "shopify", "liquid", "markdown"]
+  "repository": "https://github.com/SidCorp-co/epodsystem_cli",
+  "license": "MIT",
+  "keywords": [
+    "epod",
+    "docs",
+    "cms",
+    "shopify",
+    "liquid",
+    "markdown"
+  ]
 }

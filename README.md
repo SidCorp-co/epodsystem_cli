@@ -48,22 +48,27 @@ domain and target theme when the context call cannot be trusted.
 ## Install
 
 ```sh
-claude plugin marketplace add /run/media/thanh/New/ai-project/epod-plugin
+git clone git@github.com:SidCorp-co/epodsystem_cli.git
+claude plugin marketplace add ./epodsystem_cli
 claude plugin install epod@epod-local
 ```
 
-That is the whole install. A `SessionStart` hook links `~/.local/bin/epod` to the bundled
-CLI on the next session — hooks are the one place `${CLAUDE_PLUGIN_ROOT}` is substituted,
-which is why the skill can call a bare command name at all. The hook is idempotent, silent
-unless it changes something, and refuses to touch `~/.local/bin/epod` if it is a real file
-rather than its own symlink. To skip the hook, link it yourself:
+That is the whole install for Claude Code: the plugin's `bin/` is added to the Bash tool's
+`PATH`, so `epod` resolves inside a session with no linking at all.
+
+Your own terminal is a separate `PATH`. A `SessionStart` hook links `~/.local/bin/epod` to
+the bundled CLI on the next session so the command works there too — hooks are where
+`${CLAUDE_PLUGIN_ROOT}` is substituted, which is what lets the link point at the install
+wherever it lives. The hook is idempotent, silent unless it changes something, and refuses
+to touch `~/.local/bin/epod` if it is a real file rather than its own symlink. To skip the
+hook, link it yourself from the clone:
 
 ```sh
-ln -sf /run/media/thanh/New/ai-project/epod-plugin/plugin/bin/epod ~/.local/bin/epod
+ln -sf "$PWD/epodsystem_cli/plugin/bin/epod" ~/.local/bin/epod
 ```
 
 Link the checkout, not the plugin cache: `claude plugin install` from a `directory`
-marketplace points at this repo in place, whereas a cache path carries a version that
+marketplace points at the clone in place, whereas a cache path carries a version that
 changes on every update. The wrapper resolves its own symlink, so the bundled scripts and
 `sections/*.liquid` are found wherever the checkout lives.
 
@@ -77,6 +82,7 @@ cd <an epod project> && epod context
 ## Layout
 
 ```text
+LICENSE                           MIT
 .claude-plugin/marketplace.json   the epod-local marketplace
 plugin/
   .claude-plugin/plugin.json
@@ -94,10 +100,10 @@ plugin/
     assets/store-theme/sections/  the six Liquid sections
 ```
 
-This repo is the source of truth for the skill. It began as
-`sid-trai-heo/.claude/skills/epod`; that copy should be deleted once the plugin is
-installed, or the same skill loads twice under one name.
+This repo is the source of truth for the skill. If a copy of it also exists as a project
+skill under any `.claude/skills/epod`, delete that copy once the plugin is installed, or the
+same skill loads twice under one name.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
