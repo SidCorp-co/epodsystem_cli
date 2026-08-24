@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+- `packs/docs/build.py`: a `.md` with no `# ` heading gets the slug as its hero
+  `doc_type` again, as it did in 1.x. The 2.0.0 rewrite left the badge empty.
+- `packs/docs/bootstrap.py`: `install` was binding a store context it never read.
+
 ## 2.0.1
 
 A concision pass over 2.0.0. No behaviour change.

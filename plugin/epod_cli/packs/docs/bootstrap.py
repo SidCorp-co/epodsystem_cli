@@ -75,7 +75,7 @@ def check(e):
 
 
 def install(e, force=False, only=None, lint=True):
-    ctx, theme_id = _store(e)
+    _, theme_id = _store(e)
     wanted = local_sections()
     if only:
         keep = {x.strip() for x in only.split(",")}

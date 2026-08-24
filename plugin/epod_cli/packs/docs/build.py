@@ -27,7 +27,7 @@ def run(e, args):
     # subheading is never taken from a '### ' line: the first one is usually a
     # section number, not a summary.
     m = re.search(r"^#\s+(.+)$", md, re.M)
-    h1 = m.group(1).strip() if m else ""
+    h1 = m.group(1).strip() if m else args.slug
     sd = {"order": ["doc", "hero"],
           "sections": {
               "doc": {"type": "doc-layout",
