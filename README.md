@@ -50,7 +50,7 @@ domain and target theme when the context call cannot be trusted.
 ```sh
 git clone git@github.com:SidCorp-co/epodsystem_cli.git
 claude plugin marketplace add ./epodsystem_cli
-claude plugin install epod@epod-local
+claude plugin install epod@epodsystem-cli
 ```
 
 That is the whole install for Claude Code: the plugin's `bin/` is added to the Bash tool's
@@ -83,7 +83,7 @@ cd <an epod project> && epod context
 
 ```text
 LICENSE                           MIT
-.claude-plugin/marketplace.json   the epod-local marketplace
+.claude-plugin/marketplace.json   the epodsystem-cli marketplace
 plugin/
   .claude-plugin/plugin.json
   bin/epod                        the one command; resolves its own symlink
