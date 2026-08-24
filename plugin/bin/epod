@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
-# $0 is the ~/.local/bin symlink, so resolve it before locating the bundled scripts.
-SK="$(dirname "$(dirname "$(readlink -f "$0")")")/skills/epod"
-exec python3 "$SK/scripts/cli.py" "$@"
+# $0 is the ~/.local/bin symlink, so resolve it before locating the package.
+ROOT="$(dirname "$(dirname "$(readlink -f "$0")")")"
+PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m epod_cli "$@"

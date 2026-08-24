@@ -6,7 +6,7 @@ ids + TOC are generated in JS at runtime, NOT from .md headings.
 - sub-heading (h3/h4) id = `<section-id>-<slugify(text)>`.
 - `slugify`: lowercase, keep Vietnamese chars, non-word → `-`, truncate.
 - Get the real anchor with `epod anchors <id> --url` — don't guess from headings.
-- **build-doc trap**: `./other.md#anchor` links get the slug mapped but the anchor kept as-is → usually mismatches the real epod anchor. After build-doc, reconcile hrefs against `anchors <target> --url`.
+- **`epod docs build` trap**: `./other.md#anchor` links get the slug mapped but the anchor kept as-is → usually mismatches the real epod anchor. After `epod docs build`, reconcile hrefs against `epod docs anchors <target> --url`.
 
 ## Diagrams
 - Mermaid: `<pre class="mermaid">…</pre>`; the section lazy-loads mermaid from CDN only when `pre.mermaid` exists; colors map to theme tokens; nodes hidden until rendered, text restored on CDN failure.
@@ -30,4 +30,4 @@ Verified via `list_liquid_objects`: storefront Liquid has NO `pages` object (a s
 - `sync-nav` maintains `docs-nav`: adds missing, de-dupes by `page_id`, labels generically by doc type.
 
 ## Home-page trap
-`/` is rendered by the **`index` template** (`templates/index.json`), NOT a `page_type=home` page (created but ignored). `epod store home` sets `web-hero`+`docs-toc` on the index template via `set_section_settings template:"index"` and trims `index.json` to just those two (dropping default `web-feature-grid`/`web-cta`).
+`/` is rendered by the **`index` template** (`templates/index.json`), NOT a `page_type=home` page (created but ignored). `epod docs home` sets `web-hero`+`docs-toc` on the index template via `set_section_settings template:"index"` and trims `index.json` to just those two (dropping default `web-feature-grid`/`web-cta`).
