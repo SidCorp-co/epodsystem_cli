@@ -133,7 +133,7 @@ def _render_body(lines, link_map):
             else:
                 out.append(f"<pre><code>{code}</code></pre>")
             continue
-        # h3/h4 -> <h4>. Cấp gốc giữ ở data-md-level để sync-md dựng lại đúng
+        # h3/h4 -> <h4>. Cấp gốc giữ ở data-md-level để `epod docs sync` dựng lại đúng
         # (mọi cấp đều render <h4> nên TOC/CSS không đổi; thiếu thuộc tính này
         # thì vòng .md -> epod -> .md hạ hết ### xuống ####).
         m = re.match(r"^(#{3,6})\s+(.*)$", s)
