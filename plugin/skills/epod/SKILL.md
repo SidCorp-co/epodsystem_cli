@@ -1,16 +1,9 @@
 ---
 name: epod
 description: >-
-  Work with the epod documentation-site system (Shopify-like CMS + theme
-  sections) via the CLI bundled in this skill. Use it BEFORE: creating/editing/
-  publishing epod pages, changing colors/theme, syncing .md ⇄ epod, OR standing
-  up a whole docs site (fresh store, sticky header/footer, home page, dynamic
-  sidebar nav). Explains what `--help` does not: runtime TOC/anchors, mermaid,
-  color tokens, Vietnamese mojibake, the design-contract linter, mandatory
-  publish, the empty-store BLANK-render trap, dynamic menu-driven nav (add a
-  page without editing old pages), the home page served by the index template.
-  Many traps are handled by the CLI itself (pre-lint / verify / sync-nav) — run
-  the command, don't memorize. Never hard-code project data — look it up live.
+  Build, publish and sync documentation sites on epod — a Shopify-like CMS of
+  pages, Liquid theme sections and a runtime nav menu — with the bundled `epod`
+  CLI. Invoke before touching an epod page, theme, nav or store.
 version: 1.1.0
 ---
 
