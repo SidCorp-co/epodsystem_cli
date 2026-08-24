@@ -98,7 +98,7 @@ def lint_section(content):
 
 
 def install_sections(e, sections, theme_id, force=False, lint=True):
-    """Upload {name: (path, content)} into the theme. Returns {path: outcome}.
+    """Upload {name: (path, content)} into the theme. Returns {path: (outcome, messages)}.
 
     Pre-lints locally, and reads each file back — the server answers a contract
     violation with a string rather than an error, so a write that "succeeded"
@@ -108,7 +108,7 @@ def install_sections(e, sections, theme_id, force=False, lint=True):
     for name, (path, content) in sections.items():
         exists = installed(e, path, theme_id)
         if exists and not force:
-            results[path] = "skip (exists)"
+            results[path] = ("skip (exists)", [])
             continue
         errs = [m for sev, m in lint_section(content) if sev == "error"] if lint else []
         if errs:
@@ -120,6 +120,7 @@ def install_sections(e, sections, theme_id, force=False, lint=True):
             results[path] = ("REJECTED", [res])
             continue
         e.clear_cache()
-        results[path] = ("overwritten" if exists else "installed") \
-            if installed(e, path, theme_id) else "FAILED (not persisted)"
+        persisted = installed(e, path, theme_id)
+        results[path] = (("overwritten" if exists else "installed") if persisted
+                         else "FAILED (not persisted)", [])
     return results

@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.1
+
+A concision pass over 2.0.0. No behaviour change.
+
+- `packs/docs/build.py`: three functions collapsed into one. Two of them returned
+  tuples and were each called once, and `hero_defaults()` was read twice per run.
+- `resources/themes.py`: `install_sections` returns one shape for every outcome
+  — `(outcome, messages)` — so the caller no longer branches on `isinstance`.
+- `packs/docs/bootstrap.py`: `_store(e)` replaces five hand-written
+  `context(e)` + `resolve_theme_id(ctx)` pairs.
+- `packs/docs/nav.py`: `label_for` was rebuilding the merged label table a second
+  time through `doc_code`; it now passes the one it already has.
+- Dropped `HEADER_MENU_HANDLE`, a constant nothing read.
+- Trimmed docstrings that restated the README or the skills: the `.epod.json`
+  example lived in three places, and the md2doc-version trap in two.
+- `epod theme lint` declares `local=True` on its parser instead of the dispatcher
+  inferring offline-ness from a missing attribute.
+
 ## 2.0.0
 
 The CLI was a documentation-site builder with a store underneath it. It is now a CLI for the

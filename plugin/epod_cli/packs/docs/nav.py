@@ -12,9 +12,9 @@ from ...resources import menus, pages
 from . import NAV_HANDLE, labels
 
 
-def doc_code(page):
+def doc_code(page, table=None):
     """Uppercase document code from the slug ('01-brd' → BRD) or a title prefix."""
-    table = labels()
+    table = table if table is not None else labels()
     slug = page.get("slug") or ""
     s = re.sub(r"^\d+[-_.]*", "", slug)
     # Try the whole compressed slug first ('tech-design' → TECHDESIGN); several
@@ -35,7 +35,7 @@ def doc_code(page):
 def label_for(page):
     """Short generic label by document type; else the title minus its prefix."""
     table = labels()
-    code = doc_code(page)
+    code = doc_code(page, table)
     if code in table:
         return table[code]
     t = (page.get("title") or "").strip()

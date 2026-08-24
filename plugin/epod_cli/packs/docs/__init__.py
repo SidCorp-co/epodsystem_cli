@@ -12,8 +12,7 @@ from ...core import config
 
 SECTIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sections")
 
-NAV_HANDLE = "docs-nav"        # sidebar: the full doc list
-HEADER_MENU_HANDLE = "main-menu"  # header: kept lean, not every page
+NAV_HANDLE = "docs-nav"  # the sidebar menu: the full doc list
 
 # Short, generic sidebar labels keyed by document code. A project extends or
 # overrides this through `.epod.json` → docs.labels; it never edits this table.

@@ -1,18 +1,10 @@
 """Per-project configuration: `.epod.json`, resolved by walking up from the CWD.
 
 Project data does not belong in the tool. A doc filename, a doc-type label, a
-hero heading are all facts about one company's store, so they live beside that
-project's `.mcp.json` and every one of them is optional — a project with no
-`.epod.json` gets documented defaults, never a different store's values.
-
-    {
-      "docs": {
-        "links":  { "01-BRD.md": "brd" },
-        "labels": { "RUNBOOK": "Operations Runbook" },
-        "hero":   { "heading": "...", "mark": "AB",
-                    "nav_title": "...", "toc_title": "..." }
-      }
-    }
+hero heading are facts about one company's store, so they live beside that
+project's `.mcp.json`, and every key is optional — a project with no `.epod.json`
+gets documented defaults, never a different store's values. The README and the
+epod-docs skill carry the shape.
 """
 import json
 import os

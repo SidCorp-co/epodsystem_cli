@@ -116,6 +116,7 @@ def add_theme_parser(sub):
     u.add_argument("--no-publish", action="store_true", help="skip the cache clear")
     ln = s.add_parser("lint", help="check a .liquid section against the design contract")
     ln.add_argument("files", nargs="+", help="local .liquid files")
+    ln.set_defaults(local=True)
 
 
 def run_theme(e, a):
@@ -316,7 +317,7 @@ def main():
 
     if a.group == "paths":
         return run_paths()
-    if (a.group, sub) in OFFLINE and getattr(a, "local", True):
+    if (a.group, sub) in OFFLINE and a.local:
         handler = dict(RESOURCES, **PACKS)[a.group][1]
         return sys.exit(handler(None, a) or 0)
 

@@ -16,6 +16,12 @@ from . import NAV_HANDLE, local_sections
 from . import nav as nav_mod
 
 
+def _store(e):
+    """(context, theme_id) — every command below needs both."""
+    ctx = context(e)
+    return ctx, resolve_theme_id(ctx)
+
+
 def doctor(e, local_only=False):
     """Pre-lint the bundled sections, then diagnose the live store. Returns rc."""
     rc = 0
@@ -31,8 +37,7 @@ def doctor(e, local_only=False):
 
     if not local_only:
         try:
-            ctx = context(e)
-            theme_id = resolve_theme_id(ctx)
+            ctx, theme_id = _store(e)
             print("\n== store (live) ==")
             miss = [p for _, (p, _) in local_sections().items()
                     if not themes.installed(e, p, theme_id)]
@@ -57,8 +62,7 @@ def doctor(e, local_only=False):
 
 
 def check(e):
-    ctx = context(e)
-    theme_id = resolve_theme_id(ctx)
+    ctx, theme_id = _store(e)
     print(json.dumps({
         "store_id": ctx.get("store_id"),
         "store_slug": ctx.get("store_slug") or ctx.get("store_name"),
@@ -71,22 +75,19 @@ def check(e):
 
 
 def install(e, force=False, only=None, lint=True):
-    ctx = context(e)
-    theme_id = resolve_theme_id(ctx)
+    ctx, theme_id = _store(e)
     wanted = local_sections()
     if only:
         keep = {x.strip() for x in only.split(",")}
         wanted = {k: v for k, v in wanted.items() if k in keep}
     results = themes.install_sections(e, wanted, theme_id, force=force, lint=lint)
     plain = {}
-    for path, outcome in results.items():
-        if isinstance(outcome, tuple):
-            plain[path] = outcome[0]
+    for path, (outcome, messages) in results.items():
+        plain[path] = outcome
+        if messages:
             print(f"\n!! {path}:", file=sys.stderr)
-            for m in outcome[1]:
+            for m in messages:
                 print(f"   - {m}", file=sys.stderr)
-        else:
-            plain[path] = outcome
     print(json.dumps({"theme_id": theme_id, "results": plain}, ensure_ascii=False, indent=2))
     print("\nNext: epod docs build each .md, then: epod docs verify <slug>")
     return 1 if any("REJECTED" in v or "FAILED" in v for v in plain.values()) else 0
@@ -96,8 +97,7 @@ def verify(e, slug):
     """Live URL plus the two failures a fetch can actually see: a 404, and a
     section type with no template. Section bodies are JS-injected, so a real
     verify is still browser_navigate + browser_evaluate on the DOM."""
-    ctx = context(e)
-    theme_id = resolve_theme_id(ctx)
+    ctx, theme_id = _store(e)
     url = f"https://{resolve_domain(ctx)}/pages/{slug}?v={random.randint(1, 99999)}"
     print(url)
     rc = 0
@@ -139,8 +139,7 @@ def home(e, heading=None, eyebrow=None, subheading=None):
     `/` is rendered by the `index` TEMPLATE, not by a page_type=home page — that
     page is ignored — so this writes through set_section_settings on 'index'.
     """
-    ctx = context(e)
-    theme_id = resolve_theme_id(ctx)
+    ctx, theme_id = _store(e)
     docs = pages.content_pages(e)
     cards = [{"type": "card", "settings": {
         "tag": nav_mod.doc_code(p),

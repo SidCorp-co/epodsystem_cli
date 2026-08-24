@@ -1,10 +1,7 @@
 """A published page → the body of its .md, the other direction.
 
 The .md header above the first '## <num>.' is preserved; only the body is
-replaced. md2doc round-trips heading level and list structure through
-`data-md-level`, but only for HTML that the current md2doc wrote — a page last
-written by an older version comes back with headings demoted, so the .md diff
-is the check that matters after this runs.
+replaced. See the epod-docs skill for why the .md diff is the check that matters.
 """
 import os
 
