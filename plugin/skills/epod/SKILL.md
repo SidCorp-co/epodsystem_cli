@@ -28,6 +28,8 @@ epod query '<graphql>'
 epod cache clear
 
 epod docs   …         # the documentation-site pack → skill: epod-docs
+epod vi     …         # natural Vietnamese for docs and locales → skill: epod-vi
+                      #   (no token, no connection: local files + a text gateway)
 ```
 
 ## Rules

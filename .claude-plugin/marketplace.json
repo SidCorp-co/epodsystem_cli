@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "epod",
-      "description": "Drive the epod platform from the terminal: pages, theme files with a design-contract linter, menus, schema introspection, and packs for whole use cases — documentation sites first.",
+      "description": "Drive the epod platform from the terminal: pages, theme files with a design-contract linter, menus, schema introspection, and packs for whole use cases — documentation sites, and natural Vietnamese for what they publish.",
       "author": {
         "name": "Thanh Nguyen",
         "email": "thanhnh@grytt.co"

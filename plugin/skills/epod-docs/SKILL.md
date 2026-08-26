@@ -27,6 +27,11 @@ epod docs doctor                      # can this store render a doc page at all?
   loses manual edits and resets anchors.
 - **Stand up a docs site (fresh store):** `epod docs doctor` → `install` → `epod docs build`
   each doc → `epod docs nav` → `epod docs home` → browser-verify.
+- **Vietnamese content: never hand-write it.** A .md going up in Vietnamese goes through
+  `epod vi` first — `epod vi lint file.vi.md` is free and offline, `epod vi doc file.md`
+  writes it, `epod vi review` rewrites what lint flags. Then `epod docs build`. Model-written
+  Vietnamese publishes clean and reads translated, and nobody reviewing the build catches it.
+  Full workflow: skill `epod-vi`.
 - **After `sync`, always `git diff` the .md.** md2doc preserves `###` levels and list blocks
   via `data-md-level`, but only for HTML built by the *current* md2doc — a page last written
   by an older version round-trips back with headings demoted and lists split into loose
@@ -61,6 +66,7 @@ document-type table; only add a code the defaults miss.
 | **Design-contract linter** | `epod theme put` rejects hard-coded hex, a missing Style group, or an unclosed tag | `epod docs install` pre-lints before upload; `epod theme lint <file>` runs it standalone, no token. Hex is fine in `:root{}`/`var(--x,#fff)`/`rgba()`/`hsl()`; a literal hex meant for display belongs in page content, not a section |
 | **Must publish + verify** | live serves only the *published* build; clear-cache ≠ publish; curl can't see JS-injected content | write commands auto-publish; `verify` warns on 404/blank; the REAL check is `browser_navigate` + `browser_evaluate` on the DOM |
 | **Nav / adding pages** | editing every page's nav by hand | nav is a runtime **menu**; add a page → `epod docs nav`, zero edits to old pages |
+| **Vietnamese reads machine-translated** | `sự thay đổi của bạn đã được lưu lại một cách thành công` — valid, published, and obviously not written by a Vietnamese person. Invisible to a reviewer who does not read Vietnamese | `epod vi lint <file>` before build (free, offline); `epod vi review` for rewrites; pin the voice and vocabulary in `.epod.json` → `vi` |
 | **Vietnamese mojibake** | `Ká»ch báº£n` when HTTP is hand-rolled | the CLI always sends UTF-8; repair an already-damaged page with `epod page fix-mojibake <id>` (eyeball it — the detector can false-positive) |
 | **Markdown `>` blockquotes are DROPPED** | md2doc strips `>` lines as editor notes, so a mid-document callout vanishes silently — content loss a 200 won't reveal | don't use `>` for body callouts; lead the paragraph with `**⚠ Label.**` instead |
 | **Inline code in a table HEADER is invisible** | `` `code` `` inside a `\| th \|` renders white-on-pale against the blue header → unreadable | use `**bold**` in header cells; keep backticks for body cells |

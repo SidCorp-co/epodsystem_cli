@@ -11,6 +11,8 @@ epod theme get sections/doc-layout.liquid
 epod schema liquid                      # what a theme can read at runtime
 epod docs build file.md --slug srs      # the docs pack: markdown → page, published
 epod docs nav                           # rebuild the sidebar from published pages
+epod vi lint docs/02-SRS.vi.md          # the vi pack: does the Vietnamese read translated?
+epod vi doc docs/02-SRS.md              # write it in natural Vietnamese instead
 ```
 
 `epod --help` lists the groups; `epod <group> --help` the verbs.
@@ -19,21 +21,24 @@ epod docs nav                           # rebuild the sidebar from published pag
 
 A **resource** is a verb on an epod noun and carries no use case — `page`, `theme`, `menu`,
 `schema`. A **pack** is a workflow that owns its own policy and bundled assets — `docs`
-builds documentation sites. The split is what makes a second use case cheap: it is a
-directory under `epod_cli/packs/` and one entry in `PACKS`, with no change to the layers
-below it.
+builds documentation sites, `vi` writes and audits the Vietnamese that goes into them. The
+split is what makes a second use case cheap: it is a directory under `epod_cli/packs/` and
+one entry in `PACKS`, with no change to the layers below it.
 
 ```text
 epod_cli/
   core/         transport, auth, store context, project config, text helpers
   resources/    pages · themes (+ the design-contract linter) · menus · schema
   packs/docs/   md2doc, doc blocks, build/sync, nav, bootstrap, sections/*.liquid
+  packs/vi/     the Vietnamese style contract, its gateway client, lint and CTA audits
   cli.py        dispatch
 ```
 
 A pack may import `core/` and `resources/`. Nothing in `core/` or `resources/` may import a
 pack, and pack code does not call `e.tool()` directly — a missing verb is added to
-`resources/` instead.
+`resources/` instead. `vi` is the one pack that imports neither transport nor resources: it
+talks to a text gateway rather than the store, so `main()` dispatches it before the client is
+built and it runs in a checkout with no `.mcp.json`.
 
 ## Global command, project-scoped credential
 
@@ -72,10 +77,47 @@ optional, and `epod paths` reports which file was found.
 }
 ```
 
+## Vietnamese that does not read translated
+
+A model asked in passing for Vietnamese returns Vietnamese that parses, publishes and reads
+like a machine — `sự thay đổi của bạn đã được lưu lại một cách thành công`. On a docs site
+nobody catches it, because nobody reviewing the build reads Vietnamese: the page is 200, the
+JSON is valid, the tiếng Việt is just wrong. The `vi` pack exists to stop that.
+
+```sh
+epod vi lint docs/*.vi.md locales/vi.json   # free, offline, CI-safe with --strict
+epod vi doc docs/02-SRS.md                  # → 02-SRS.vi.md, code and links untouched
+epod vi review docs/02-SRS.vi.md            # where existing Vietnamese reads translated
+epod vi i18n locales/en.json                # → vi.json, missing keys only
+epod vi i18n locales/en.json --check        # offline: placeholders + CTA discipline
+```
+
+Four things make it more than a `curl` wrapper:
+
+1. **A written style contract** (`packs/vi/prompts.py`) — xưng hô rules, bare imperative UI
+   verbs, the specific calques to delete, which technical terms stay in English. It is
+   versioned with the code, so a bad translation is a diff you can argue with rather than a
+   prompt someone improvised.
+2. **An offline linter derived from that same contract.** `epod vi lint` parses its patterns
+   out of `STYLE` at import time, so the rules the translator obeys and the rules the linter
+   enforces cannot drift. It costs nothing and catches most machine Vietnamese without a
+   model ever being asked.
+3. **A voice you choose.** `register`: `san-pham` (bạn), `trang-trong` (quý khách),
+   `than-mat`. Vietnamese encodes the relationship in the pronouns, and picking wrong is the
+   most visible localization error there is.
+4. **A verification gate.** Placeholders — `{{name}}`, `%1$s`, `%(name)s`, ICU plurals, HTML
+   tags — are compared source against translation; a string that loses one is retried once,
+   then left in English and reported. And a bare English CTA that comes back with an object
+   (`Save` → `Lưu khách hàng`) is refused, so one `Lưu` keeps working on every form.
+
+Project voice and vocabulary go in `.epod.json` under `vi`; the gateway key does **not** —
+that file is committed. It is read from `MUSETOOLS_API_KEY` or
+`~/.config/vi-natural/config.json` (chmod 600). `epod vi doctor` prints what resolved.
+
 ## Requirements
 
 - Python 3 with [`requests`](https://pypi.org/project/requests/) — the only dependency
-  (md2doc and the design linter are stdlib-only)
+  (md2doc, the design linter and the whole `vi` pack are stdlib-only)
 - `~/.local/bin` on `PATH`, for use outside Claude Code
 
 ## Install
@@ -110,16 +152,19 @@ bundled `sections/*.liquid` are found wherever the checkout lives.
 ```sh
 epod theme lint plugin/epod_cli/packs/docs/sections/*.liquid   # no network, no token
 epod docs doctor --local                                       # same, via the pack
+epod vi lint <any .vi.md>                                      # same, via the vi pack
 cd <an epod project> && epod context
 ```
 
 ## Skills
 
-Two, so a docs task does not pay for a catalog task and vice versa:
+Three, so a docs task does not pay for a catalog task and vice versa:
 
 - `epod` — orientation, project scoping, the resource verbs, the rules that hold everywhere.
 - `epod-docs` — the docs workflow, its traps, and `references/` for TOC/anchors, mermaid,
   colour tokens and the six bundled sections.
+- `epod-vi` — when Vietnamese is about to be written, translated or reviewed. Its first rule
+  is that the model does not write the Vietnamese itself.
 
 ## Layout
 
@@ -136,6 +181,7 @@ plugin/
   skills/epod/SKILL.md
   skills/epod-docs/SKILL.md
   skills/epod-docs/references/    internals.md · sections.md
+  skills/epod-vi/SKILL.md
 ```
 
 This repo is the source of truth for the skills. If a copy of either also exists as a project

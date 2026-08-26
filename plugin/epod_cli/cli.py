@@ -2,8 +2,13 @@
 
 Two axes. A RESOURCE is a verb on an epod noun and carries no use case:
 `epod page`, `epod theme`, `epod menu`, `epod schema`. A PACK is a workflow that
-owns its own policy and assets: `epod docs` builds documentation sites. A second
-pack is a directory under epod_cli/packs and one entry in PACKS below.
+owns its own policy and assets: `epod docs` builds documentation sites, `epod vi`
+writes and audits the Vietnamese that goes into them. Another pack is a directory
+under epod_cli/packs and one entry in PACKS below.
+
+`vi` is the one pack that never opens a connection: it talks to a text gateway,
+not to the store, so main() dispatches it before Epod() is built and its handler
+ignores the `e` every other handler is given.
 
 Global but project-scoped: the token comes from the `.mcp.json` found by walking
 up from the CWD, and project data from a `.epod.json` beside it, so every command
@@ -26,6 +31,8 @@ examples:
   epod page list                        pages (id/slug/status)
   epod docs build docs/02-SRS.md --slug srs
   epod docs nav                         rebuild the sidebar from published pages
+  epod vi lint docs/02-SRS.vi.md        free: does the Vietnamese read translated?
+  epod vi doc docs/02-SRS.md            write it in natural Vietnamese instead
   epod schema liquid                    what a theme can read at runtime
 
 Project data (doc link map, sidebar labels, hero defaults) lives in .epod.json
@@ -182,6 +189,16 @@ def run_schema(e, a):
 
 
 # ---------------------------------------------------------------- packs
+def add_vi_parser(sub):
+    from .packs.vi import commands
+    commands.add_parser(sub)
+
+
+def run_vi(e, a):
+    from .packs.vi import commands
+    return commands.run(e, a)
+
+
 def add_docs_parser(sub):
     p = sub.add_parser("docs", help="documentation sites: build, sync, nav, home, bootstrap")
     s = p.add_subparsers(dest="sub", required=True, metavar="<verb>")
@@ -273,7 +290,8 @@ def run_docs(e, a):
         return bootstrap.verify(e, a.slug)
 
 
-PACKS = {"docs": (add_docs_parser, run_docs)}
+PACKS = {"docs": (add_docs_parser, run_docs),
+         "vi": (add_vi_parser, run_vi)}
 RESOURCES = {"page": (add_page_parser, run_page),
              "theme": (add_theme_parser, run_theme),
              "menu": (add_menu_parser, run_menu),
@@ -301,12 +319,13 @@ def build_parser():
 
 
 def run_paths():
-    from .packs import docs as docs_pack
+    from .packs import docs as docs_pack, vi as vi_pack
     cfg = config.path()
     emit({"package": os.path.dirname(os.path.abspath(__file__)),
           "packs": sorted(PACKS),
           "resources": sorted(RESOURCES),
           "docs_sections": docs_pack.SECTIONS_DIR,
+          "vi_gateway_config": vi_pack.USER_CONFIG,
           "project_config": cfg or f"(none found above {os.getcwd()})",
           "token": "EPOD_TOKEN" if os.environ.get("EPOD_TOKEN") else ".mcp.json"})
 
@@ -317,6 +336,11 @@ def main():
 
     if a.group == "paths":
         return run_paths()
+    # The vi pack works on local files through a text gateway; asking for a store
+    # token would make it fail in the one place it is most useful — a checkout
+    # with docs in it and no .mcp.json.
+    if a.group == "vi":
+        return sys.exit(run_vi(None, a) or 0)
     if (a.group, sub) in OFFLINE and a.local:
         handler = dict(RESOURCES, **PACKS)[a.group][1]
         return sys.exit(handler(None, a) or 0)

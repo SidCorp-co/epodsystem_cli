@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.1.0
+
+A second pack: `epod vi`, natural Vietnamese for the documentation the docs pack
+publishes. `epod docs build` was shipping Vietnamese a model had written in
+passing — valid, published, and obviously not written by a Vietnamese person.
+Nobody reviewing the build reads Vietnamese, so nothing caught it.
+
+- `packs/vi/`: `lint` (free, offline), `doc`, `review`, `i18n`, `translate`,
+  `doctor`. Stdlib only, its own gateway client, no `requests` and no store
+  token — `main()` dispatches `vi` before `Epod()` is built, so it works in a
+  checkout with no `.mcp.json`. It is the one pack handler that ignores `e`.
+- `packs/vi/prompts.py` is the actual product: a written Vietnamese style
+  contract — xưng hô, bare imperative UI verbs, the calques to delete, which
+  technical terms stay in English — versioned with the code.
+- `packs/vi/lint.py` parses its patterns out of that contract at import time
+  rather than restating them. A second hand-maintained list would drift, and the
+  day the two disagreed the linter would be wrong in exactly the cases it exists
+  for. 17 phrase rules today, plus passive `được X bởi Y`, `sự/việc + verb`
+  nominalization, and per-file `vui lòng` / plural-marker density.
+- Placeholder gate on every translated string (`{{name}}`, `%1$s`, `%(name)s`,
+  ICU plurals, HTML tags): a string that loses or renames one is retried once,
+  then left in English and reported. Exit code 2 means written-but-refused.
+- CTA discipline: a bare English CTA that comes back with an object (`Save` →
+  `Lưu khách hàng`) is refused on translation and reported by `i18n --check`,
+  which also names the per-screen action keys one shared `common.save` covers.
+- `.epod.json` gains a `vi` block — `register`, `region`, `glossary`, `ignore`.
+  The gateway key is deliberately not read from it: that file is committed. It
+  comes from `MUSETOOLS_API_KEY` or `~/.config/vi-natural/config.json`.
+- `DOC_CONTEXT` no longer hard-codes `bạn`. Documentation tone was overriding the
+  register, so a `trang-trong` project got `bạn` in its docs and `quý khách`
+  everywhere else.
+- New skill `epod-vi`; `epod-docs` gains the Vietnamese step in its workflow and
+  a trap row for Vietnamese that reads machine-translated.
+
 ## 2.0.2
 
 - `packs/docs/build.py`: a `.md` with no `# ` heading gets the slug as its hero

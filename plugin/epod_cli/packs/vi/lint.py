@@ -1,0 +1,157 @@
+"""Offline calque check: the machine-translation tells, found without a gateway.
+
+Every phrase this looks for is already written down in `prompts.STYLE`, in the
+block the model is told to obey. Restating them here as a second hand-maintained
+list would guarantee the two drift, and the day they disagree the lint is wrong
+in exactly the cases it exists to catch. So the patterns are parsed out of the
+contract at import time: the contract stays the single source of truth, and a
+phrase added to it starts being flagged the same day.
+
+This runs on a .md or a locale .json, costs nothing, and needs no network — it is
+the check to run before `epod docs build`, when `epod vi review` (which asks the
+model) is the check to run when this one fires or the document is new.
+"""
+import os
+import re
+
+from . import doc as doc_mod
+from . import locale, prompts
+from .util import CliError, read_json
+
+# `✗ "bad"  ✓ "good"` and `"bad" → "good"` are the two shapes the contract uses.
+_MARKED = re.compile(r'✗\s*"([^"]+)"\s*✓\s*"([^"]+)"')
+_ARROW = re.compile(r'"([^"]+)"\s*→\s*"([^"]+)"')
+
+
+def phrases():
+    """{bad phrase: what the contract says to write instead}."""
+    out = {}
+    for line in prompts.STYLE.splitlines():
+        for bad, good in _MARKED.findall(line):
+            out.setdefault(bad.lower(), good)
+        if "✗" in line:
+            continue  # the ✓ half of a marked pair is not an arrow rule
+        for bad, good in _ARROW.findall(line):
+            out.setdefault(bad.lower(), good)
+    return out
+
+
+PHRASES = phrases()
+_PHRASE_RE = [(re.compile(re.escape(bad), re.I | re.U), bad, good)
+              for bad, good in sorted(PHRASES.items(), key=lambda kv: -len(kv[0]))]
+
+# Three rules the contract states as grammar plus an example, which no quoted
+# pair can express: the "được X bởi Y" passive, "sự/việc + verb" nominalization,
+# and plural markers scattered where Vietnamese does not need them. The verb list
+# is closed and grammatical, so unlike a phrase list it does not drift.
+_PASSIVE = re.compile(r"\bđược\b[^.!?]{1,40}?\bbởi\b", re.I | re.U)
+_NOMINAL = re.compile(
+    r"\b(sự|việc) (thay đổi|xóa|xoá|tạo|thêm|sửa|lưu|gửi|cập nhật|sử dụng|thực hiện|"
+    r"kiểm tra|kết nối|đăng nhập|đăng ký|đăng xuất|thanh toán|cài đặt|quản lý|xử lý|"
+    r"tải|chọn|lựa chọn|hủy|huỷ|khôi phục)\b", re.I | re.U)
+_PLEASE = re.compile(r"\bvui lòng\b", re.I | re.U)
+_PLURAL = re.compile(r"\b(các|những)\b", re.I | re.U)
+
+# Vietnamese only. An English UI string is a missing translation, not a calque.
+_DIACRITIC = re.compile(r"[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệ"
+                        r"ìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]", re.I | re.U)
+
+
+def is_vietnamese(text):
+    return bool(_DIACRITIC.search(text))
+
+
+def scan(text, where):
+    """Findings in one string. `where` is a line number or a key path."""
+    found = []
+    if not is_vietnamese(text):
+        return found
+    for pattern, bad, good in _PHRASE_RE:
+        match = pattern.search(text)
+        if match:
+            found.append({"where": where, "rule": "calque",
+                          "found": match.group(0),
+                          "suggest": good, "text": " ".join(text.split())[:120]})
+    match = _PASSIVE.search(text)
+    if match:
+        found.append({"where": where, "rule": "passive",
+                      "found": match.group(0),
+                      "suggest": "câu chủ động, hoặc bỏ chủ ngữ",
+                      "text": " ".join(text.split())[:120]})
+    match = _NOMINAL.search(text)
+    if match:
+        found.append({"where": where, "rule": "nominalized",
+                      "found": match.group(0),
+                      "suggest": "bỏ \"%s\": %s" % (match.group(1), match.group(2)),
+                      "text": " ".join(text.split())[:120]})
+    return found
+
+
+def _markdown(path):
+    """Prose blocks only: fenced code, frontmatter and inline code are exempt."""
+    source = open(path, encoding="utf-8").read()
+    findings, line = [], 1
+    for kind, block in doc_mod.segment(source):
+        if kind == "text":
+            slots = []
+            findings.extend(scan(doc_mod.protect_inline(block, slots), line))
+        line += block.count("\n")
+    return findings, density(source)
+
+
+def _locale(path):
+    tree = read_json(path)
+    if tree is None:
+        raise CliError("cannot read %s" % path)
+    findings, joined = [], []
+    for keypath, text in locale.flatten(tree):
+        findings.extend(scan(text, locale.label(keypath)))
+        joined.append(text)
+    return findings, density("\n".join(joined))
+
+
+def density(text):
+    """Whole-file habits: one occurrence is fine, a habit is the tell."""
+    words = max(len(text.split()), 1)
+    return {"please": len(_PLEASE.findall(text)),
+            "plural": len(_PLURAL.findall(text)),
+            "words": words}
+
+
+def run(paths, max_please=1):
+    """Print findings for each file. Returns the number of files that had any."""
+    dirty = 0
+    for path in paths:
+        if not os.path.isfile(path):
+            raise CliError("no such file: %s" % path)
+        if path.endswith(".json"):
+            findings, stats = _locale(path)
+        else:
+            findings, stats = _markdown(path)
+
+        notes = []
+        if stats["please"] > max_please:
+            notes.append('"vui lòng" %d times — the contract allows one per screen'
+                         % stats["please"])
+        # Vietnamese does not mark plural unless the count is the point; one every
+        # forty words means the English "the ...s" is being copied across.
+        if stats["plural"] * 40 > stats["words"] and stats["plural"] > 2:
+            notes.append('"các"/"những" %d times in %d words — drop the ones that '
+                         "carry no information" % (stats["plural"], stats["words"]))
+        if not findings and not notes:
+            print("%s: clean (%d phrase rules)" % (path, len(PHRASES)))
+            continue
+        dirty += 1
+        print("%s: %d finding(s)" % (path, len(findings) + len(notes)))
+        for finding in findings:
+            print('  %-28s %s: "%s" → %s'
+                  % (finding["where"], finding["rule"], finding["found"],
+                     finding["suggest"]))
+            print("      %s" % finding["text"])
+        for note in notes:
+            print("  %-28s style: %s" % ("(whole file)", note))
+    if dirty:
+        print("\nThese are the tells a machine leaves. `epod vi review <file>` asks the "
+              "model for a rewrite of each one; `epod vi doc` writes the Vietnamese "
+              "properly in the first place.")
+    return dirty
