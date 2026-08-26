@@ -49,6 +49,19 @@ _NOMINAL = re.compile(
     r"\b(sự|việc) (thay đổi|xóa|xoá|tạo|thêm|sửa|lưu|gửi|cập nhật|sử dụng|thực hiện|"
     r"kiểm tra|kết nối|đăng nhập|đăng ký|đăng xuất|thanh toán|cài đặt|quản lý|xử lý|"
     r"tải|chọn|lựa chọn|hủy|huỷ|khôi phục)\b", re.I | re.U)
+# Two constructions where the nominalization is not padding but grammar, and
+# flagging them makes the linter wrong on correct Vietnamese. After a preposition
+# or a quantifier there is no other way to say it — "hậu quả của việc sửa", "thay
+# cho việc tải tay", "bốn việc Thêm · Xem · Sửa". And a nominalization that is the
+# subject of its own clause is the normal way to make a verb the topic — "Việc xóa
+# bị chặn". What the contract objects to is the *object* form, "thực hiện việc xóa
+# tài khoản", which neither guard covers.
+_NOMINAL_BEFORE = re.compile(
+    r"(của|cho|về|với|trong|ngoài|vì|do|nhờ|bằng|"
+    r"một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười|mọi|từng|nhiều|vài)\s+$", re.I | re.U)
+_NOMINAL_AFTER = re.compile(
+    r"^[\s*_]*(vẫn|bị|là|không|đã|sẽ|có|cũng|phải|luôn|chỉ|khiến|làm|nên|thì)\b",
+    re.I | re.U)
 _PLEASE = re.compile(r"\bvui lòng\b", re.I | re.U)
 _PLURAL = re.compile(r"\b(các|những)\b", re.I | re.U)
 
@@ -79,12 +92,19 @@ def scan(text, where):
                       "suggest": "câu chủ động, hoặc bỏ chủ ngữ",
                       "text": " ".join(text.split())[:120]})
     match = _NOMINAL.search(text)
-    if match:
+    if match and _is_padding(text, match):
         found.append({"where": where, "rule": "nominalized",
                       "found": match.group(0),
                       "suggest": "bỏ \"%s\": %s" % (match.group(1), match.group(2)),
                       "text": " ".join(text.split())[:120]})
     return found
+
+
+def _is_padding(text, match):
+    """True when `sự/việc` is the padding the contract objects to, not grammar."""
+    if _NOMINAL_BEFORE.search(text[:match.start()]):
+        return False
+    return not _NOMINAL_AFTER.match(text[match.end():])
 
 
 def _markdown(path):
@@ -94,9 +114,32 @@ def _markdown(path):
     for kind, block in doc_mod.segment(source):
         if kind == "text":
             slots = []
-            findings.extend(scan(doc_mod.protect_inline(block, slots), line))
+            for finding in scan(doc_mod.protect_inline(block, slots), line):
+                findings.append(locate(finding, block, line))
         line += block.count("\n")
     return findings, density(source)
+
+
+def locate(finding, block, start_line):
+    """Point a finding at its phrase rather than at the paragraph holding it.
+
+    A markdown block is one paragraph or one list, often twenty lines of it, so
+    reporting where the block starts and quoting its first 120 characters can
+    name a line that does not contain the phrase at all — a finding nobody can
+    navigate to. The matched text is prose, so it survives inline-code masking
+    unchanged and can simply be found again in the original block.
+    """
+    index = block.find(finding["found"])
+    if index < 0:
+        return finding
+    finding["where"] = start_line + block.count("\n", 0, index)
+    begin = block.rfind("\n", 0, index) + 1
+    end = block.find("\n", index)
+    row = block[begin:] if end < 0 else block[begin:end]
+    offset = index - begin
+    window = " ".join(row[max(0, offset - 40):offset + 80].split())
+    finding["text"] = ("…" if offset > 40 else "") + window
+    return finding
 
 
 def _locale(path):

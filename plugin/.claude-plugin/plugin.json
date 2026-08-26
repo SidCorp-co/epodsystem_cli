@@ -1,7 +1,7 @@
 {
   "name": "epod",
   "description": "Drive the epod platform from the terminal: pages, theme files with a design-contract linter, menus, schema introspection, and packs for whole use cases — documentation sites, and natural Vietnamese for what they publish.",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": {
     "name": "Thanh Nguyen",
     "email": "thanhnh@grytt.co"

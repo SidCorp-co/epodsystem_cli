@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.2.1
+
+Both fixes come from running `epod vi lint` over a Vietnamese-first codebase —
+33 hand-written docs and 1264 UI strings — where every nominalization finding
+turned out to be wrong and none of the line numbers pointed at the phrase.
+
+- `packs/vi/lint.py`: a finding now names the line its phrase is on and quotes a
+  window around it. It was reporting where the enclosing markdown *block* began
+  and quoting that block's first 120 characters, so on a twenty-line list the
+  cited line did not contain the phrase and the excerpt did not show it.
+- The `sự/việc + verb` rule no longer fires where the nominalization is grammar
+  rather than padding: after a preposition or quantifier ("hậu quả của việc sửa",
+  "thay cho việc tải tay", "bốn việc Thêm · Xem · Sửa"), or where it is the
+  subject of its own clause ("Việc xóa bị chặn"). The object form the contract
+  actually objects to — "thực hiện việc xóa tài khoản" — still fires, as does
+  its "sự thay đổi ... đã được lưu" example.
+
 ## 2.2.0
 
 - `epod vi install --key <key>` (alias `login`): stores the gateway endpoint, key
