@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.2.0
+
+- `epod vi install --key <key>` (alias `login`): stores the gateway endpoint, key
+  and default model at `~/.config/vi-natural/config.json`, 0600, created with that
+  mode rather than chmod'ed after. It asks the gateway whether the key works before
+  writing — a key that does not work is worse than no key, because every later
+  command then fails at the point of use with somebody else's error message.
+  `--no-verify` skips that; `--base-url` and `--model` override the defaults.
+- The pack had a reader for that file and no writer. Now it has `save()`.
+- Prompts for the key only on a TTY. An unconditional `input()` would hang a
+  Claude Code session instead of failing it.
+- Voice and vocabulary are deliberately not stored there: they are project-shaped
+  and already have a home in `.epod.json` → `vi`.
+- `hooks/link-cli.sh` says so once, on the branch that just created the symlink,
+  and only when neither the config file nor `MUSETOOLS_API_KEY` exists. Not on
+  every SessionStart — an unconfigured `vi` pack must not nag sessions that never
+  touch Vietnamese, and no other group is gated on it.
+- `no gateway key configured` now leads with the command that fixes it.
+
 ## 2.1.0
 
 A second pack: `epod vi`, natural Vietnamese for the documentation the docs pack

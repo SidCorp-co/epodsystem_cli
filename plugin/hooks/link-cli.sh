@@ -27,6 +27,15 @@ mkdir -p "$BIN_DIR"
 ln -sfn "$TARGET" "$LINK"
 echo "epod plugin: linked $LINK -> $TARGET"
 
+# Said once, at the moment of install, and only for the one pack that needs a
+# credential of its own: `epod vi` talks to a text gateway rather than to the
+# store, so no .mcp.json can supply its key. Every other group works untouched
+# without this, which is why it is a notice and not a failure.
+VI_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/vi-natural/config.json"
+if [ ! -f "$VI_CONFIG" ] && [ -z "$MUSETOOLS_API_KEY" ]; then
+  echo "epod plugin: \`epod vi\` needs a gateway endpoint and key — run: epod vi install --key <key>" >&2
+fi
+
 # Retire the per-script commands this plugin used to install.
 for stale in epod-store-init epod-skill-root; do
   path="$BIN_DIR/$stale"

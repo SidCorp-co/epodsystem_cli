@@ -19,6 +19,7 @@ project-shaped half (register, region, glossary, ignore globs). The gateway key
 is not project-shaped and `.epod.json` gets committed, so the key is read from
 the environment or from `~/.config/vi-natural/config.json` and never from here.
 """
+import json
 import os
 
 from ...core import config as project_config
@@ -89,10 +90,11 @@ class Settings:
                or self.user.get("api_key"))
         if not key:
             raise CliError(
-                "no gateway key configured.\n"
-                "  export MUSETOOLS_API_KEY=<key>\n"
-                "  or put it in %s (chmod 600)\n"
-                "  it does not belong in .epod.json — that file is committed" % USER_CONFIG)
+                "no gateway key configured — the vi pack talks to a text gateway, "
+                "not to the store.\n"
+                "  run: epod vi install --key <key>\n"
+                "  or:  export MUSETOOLS_API_KEY=<key>\n"
+                "  it does not belong in .epod.json — that file is committed")
         return key
 
     @property
@@ -157,3 +159,24 @@ class Settings:
         if isinstance(raw, str):
             raw = [raw]
         return list(raw or [])
+
+
+def save(values):
+    """Write the gateway credential to the user's config, 0600, atomically.
+
+    Machine-level, not project-level: one key serves every checkout, and the
+    file is created with the restrictive mode rather than chmod'ed after, so
+    the key is never briefly world-readable on a shared machine.
+    """
+    directory = os.path.dirname(USER_CONFIG)
+    os.makedirs(directory, exist_ok=True)
+    current = read_json(USER_CONFIG, {}) or {}
+    current.update({k: v for k, v in values.items() if v is not None})
+    tmp = USER_CONFIG + ".tmp"
+    handle = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(handle, "w", encoding="utf-8") as out:
+        json.dump(current, out, indent=2)
+        out.write("\n")
+    os.replace(tmp, USER_CONFIG)
+    os.chmod(USER_CONFIG, 0o600)
+    return USER_CONFIG

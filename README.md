@@ -85,6 +85,7 @@ nobody catches it, because nobody reviewing the build reads Vietnamese: the page
 JSON is valid, the tiếng Việt is just wrong. The `vi` pack exists to stop that.
 
 ```sh
+epod vi install --key <gateway-key>          # once per machine, before the rest
 epod vi lint docs/*.vi.md locales/vi.json   # free, offline, CI-safe with --strict
 epod vi doc docs/02-SRS.md                  # → 02-SRS.vi.md, code and links untouched
 epod vi review docs/02-SRS.vi.md            # where existing Vietnamese reads translated
@@ -111,8 +112,8 @@ Four things make it more than a `curl` wrapper:
    (`Save` → `Lưu khách hàng`) is refused, so one `Lưu` keeps working on every form.
 
 Project voice and vocabulary go in `.epod.json` under `vi`; the gateway key does **not** —
-that file is committed. It is read from `MUSETOOLS_API_KEY` or
-`~/.config/vi-natural/config.json` (chmod 600). `epod vi doctor` prints what resolved.
+that file is committed. `epod vi install` writes it to `~/.config/vi-natural/config.json`
+at 0600, or set `MUSETOOLS_API_KEY`. `epod vi doctor` prints what resolved.
 
 ## Requirements
 
@@ -130,6 +131,18 @@ claude plugin install epod@epodsystem-cli
 
 That is the whole install for Claude Code: the plugin's `bin/` is added to the Bash tool's
 `PATH`, so `epod` resolves inside a session with no linking at all.
+
+One group needs a credential of its own. `epod vi` talks to a text gateway rather than to
+the store, so no `.mcp.json` can supply its key:
+
+```sh
+epod vi install --key <gateway-key>     # verifies against the gateway, then writes 0600
+epod vi doctor                          # confirms what resolved
+```
+
+Every other group works without it, so this is a notice at install time rather than a
+failure. The key goes to `~/.config/vi-natural/config.json` — machine-level, because it
+belongs to no project, and never to `.epod.json`, which is committed.
 
 Your own terminal is a separate `PATH`. A `SessionStart` hook links `~/.local/bin/epod` to
 the bundled CLI on the next session so the command works there too — hooks are where

@@ -10,7 +10,7 @@ import json
 import os
 import sys
 
-from . import Settings
+from . import DEFAULT_BASE_URL, DEFAULT_MODEL, Settings, save
 from . import cta, doc as doc_mod, engine, lint, locale, placeholders, prompts
 from .client import Client
 from .util import CliError, chunk_items, err, parse_json_object, read_json, write_json
@@ -40,6 +40,15 @@ def add_parser(sub):
                                              "placeholder check")
         parser.add_argument("-v", "--verbose", action="store_true")
         return parser
+
+    ins = s.add_parser("install", aliases=["login"],
+                       help="store the gateway endpoint and key (0600) — do this first")
+    ins.add_argument("--key", help="gateway API key; prompted for when omitted")
+    ins.add_argument("--base-url", dest="base_url",
+                     help="gateway base url (default %s)" % DEFAULT_BASE_URL)
+    ins.add_argument("--model", help="default model (default %s)" % DEFAULT_MODEL)
+    ins.add_argument("--no-verify", action="store_true",
+                     help="save without asking the gateway whether the key works")
 
     ln = s.add_parser("lint", help="free, offline: machine-translation tells in a .md or locale")
     ln.add_argument("files", nargs="+", help="Vietnamese .md or .json files")
@@ -75,7 +84,7 @@ def add_parser(sub):
 def run(e, a):
     """`e` is always None: this pack never touches the store. See the package docstring."""
     try:
-        return VERBS[a.sub](a)
+        return VERBS[ALIASES.get(a.sub, a.sub)](a)
     except CliError as exc:
         err("epod vi: %s" % exc)
         return 1
@@ -421,5 +430,45 @@ def cmd_doctor(a):
     return 0
 
 
-VERBS = {"lint": cmd_lint, "doc": cmd_doc, "review": cmd_review, "i18n": cmd_i18n,
+def cmd_install(a):
+    """Make the pack usable: one machine-level credential for every checkout.
+
+    The rest of the CLI holds no credential of its own — a store token belongs to
+    a project and comes from its `.mcp.json`. The gateway key is the exception:
+    it is not a property of any project, and `.epod.json` is committed, so it has
+    nowhere to live but here.
+    """
+    key = a.key
+    if not key:
+        if not sys.stdin.isatty():
+            raise CliError("no key given and nothing to prompt.\n"
+                           "  epod vi install --key <key>")
+        key = input("gateway API key: ").strip()
+    if not key:
+        raise CliError("no key given")
+
+    values = {"api_key": key, "base_url": a.base_url, "model": a.model}
+    settings_now = Settings({k: v for k, v in values.items() if v})
+    if not a.no_verify:
+        # A key that does not work is worse than no key: every later command
+        # fails at the point of use, with the gateway's error, not this one's.
+        ids = [m.get("id") for m in Client(settings_now).models()]
+        print("gateway     : %s — reachable, %d models" % (settings_now.base_url, len(ids)))
+        if settings_now.model not in ids:
+            err("! model %s is not in the gateway list" % settings_now.model)
+
+    path = save(values)
+    print("saved       : %s (0600)" % path)
+    print("key         : %s…%s" % (key[:6], key[-4:]))
+    print("model       : %s" % settings_now.model)
+    print("\nProject voice and vocabulary are separate, and belong in .epod.json:")
+    print('  { "vi": { "register": "san-pham", "glossary": { "workspace": null } } }')
+    print("\nnext: epod vi doctor")
+    return 0
+
+
+VERBS = {"install": cmd_install, "lint": cmd_lint, "doc": cmd_doc, "review": cmd_review, "i18n": cmd_i18n,
          "translate": cmd_translate, "doctor": cmd_doctor}
+
+# `epod vi login` is what muscle memory types; argparse hands back the alias.
+ALIASES = {"login": "install"}

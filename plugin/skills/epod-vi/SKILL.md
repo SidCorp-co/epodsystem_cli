@@ -20,10 +20,15 @@ page is 200, the JSON is valid, the tiếng Việt is just wrong in register. Vi
 typed straight into an edit gets no style contract, no placeholder gate and no review.
 
 `epod vi` needs no store token and never opens a connection — it works in a checkout
-with no `.mcp.json`, on local files only. Read the `epod` skill for project scoping;
+with no `.mcp.json`, on local files only. It does need its own credential, once per
+machine: `epod vi install --key <key>` stores the gateway endpoint and key at 0600 and
+verifies both against the gateway before writing. Every other `epod` group works without
+it. If a command answers `no gateway key configured`, that is the fix — ask the user for
+the key rather than writing the Vietnamese yourself. Read the `epod` skill for project scoping;
 `epod-docs` owns the publish workflow this feeds.
 
 ```bash
+epod vi install --key <key>    # once per machine: the gateway endpoint and key
 epod vi lint  <file...>        # FREE, offline: the tells a machine leaves
 epod vi doc   guide.md         # → guide.vi.md, code/links/structure untouched
 epod vi review guide.vi.md     # ask the model where existing Vietnamese reads translated
@@ -122,7 +127,7 @@ keeps coming out inconsistently, tell the user to add it here rather than fixing
 | Trap | What happens | Handling |
 |---|---|---|
 | **Model-written Vietnamese** | reads translated; nobody reviewing notices | never hand-write it — `epod vi doc` / `translate`, and `epod vi lint` before publish |
-| **Key not configured** | `no gateway key configured` | `export MUSETOOLS_API_KEY=…`, or `~/.config/vi-natural/config.json` at 0600. **Never `.epod.json`** — that file is committed |
+| **Key not configured** | `no gateway key configured` | `epod vi install --key <key>` (alias `login`), or `export MUSETOOLS_API_KEY=…`. **Never `.epod.json`** — that file is committed |
 | **Exit code 2** | file written, some strings refused and left in English | read the refused keys out to the user; do not patch them with hand-written Vietnamese |
 | **`--fix` on a human catalog** | a translator's good Vietnamese gets rewritten wordier | `review` without `--fix` first, read the findings; `--fix` is for machine-written files |
 | **Register ignored in a doc** | doc tone used to hard-code `bạn` | fixed — the VĂN PHONG block wins. Verify with `epod vi doctor`, which prints the active voice |
@@ -133,6 +138,12 @@ keeps coming out inconsistently, tell the user to add it here rather than fixing
 `2` the file was written but some strings were refused.
 
 ## Configuration
+
+`epod vi install` writes the endpoint, key and default model to
+`~/.config/vi-natural/config.json` (0600, shared with the standalone `vi-natural` CLI);
+`--base-url` and `--model` override the defaults, `--no-verify` skips the gateway check.
+Voice and vocabulary are deliberately not stored there — they are project-shaped and
+belong in `.epod.json`.
 
 Precedence: flag → environment → `.epod.json` `"vi"` → `~/.config/vi-natural/config.json`.
 Default model `gm/gemini-3.5-flash`; `--model` overrides per run, and a pro model is worth
