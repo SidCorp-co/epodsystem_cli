@@ -10,6 +10,7 @@ SENTINEL = re.compile(r"⟦VI\d+⟧")
 NOTHING_TO_SAY = re.compile(r"^[\s\W\d]*$")
 COMMENT_ONLY = re.compile(r"^\s*<!--.*-->\s*$", re.S)
 LINK_DEF = re.compile(r"^\s*\[[^\]]+\]:\s*\S+\s*$")
+HEADING = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 
 
 def segment(text):
@@ -75,6 +76,39 @@ def _flush(pieces, buffer):
         pieces.append(("text", body_text))
         if tail:
             pieces.append(("keep", tail))
+
+
+def heading_trails(pieces, root=None):
+    """Where each prose block sits in the document, keyed by index in `pieces`.
+
+    A locale string is sent with its key path because "save" means one thing
+    under `common.buttons` and another under `billing`. A paragraph in a spec
+    has the same problem and no key: lifted out of its section it can mean
+    several things, and the model has been guessing. The heading above it is
+    the key path it already has — so send it.
+
+    Keyed by index in `pieces`, not by position among the prose blocks: the
+    two callers number their items differently and only this index is common
+    to both.
+    """
+    trails, stack = {}, []
+    for index, (kind, block) in enumerate(pieces):
+        if kind != "text":
+            continue
+        own = [title for _, title in stack]
+        for line in block.splitlines():
+            match = HEADING.match(line)
+            if not match:
+                continue
+            level = len(match.group(1))
+            # A new heading closes every deeper one; its own trail is its parent's.
+            while stack and stack[-1][0] >= level:
+                stack.pop()
+            own = [title for _, title in stack]
+            stack.append((level, match.group(2)))
+        trail = ([root] if root else []) + [t for t in own if t]
+        trails[index] = " › ".join(trail)
+    return trails
 
 
 def _untranslatable(block):

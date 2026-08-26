@@ -101,6 +101,12 @@ Dùng "k" để hiểu đúng nghĩa — "save" trong "common.buttons.save" là 
 trong "billing.save" có thể là "tiết kiệm". KHÔNG dịch "k", không nhắc lại "k" trong kết quả.
 Kết quả chỉ gồm khóa số và chuỗi tiếng Việt: {"0": "...", "1": "..."}."""
 
+DOC_KEY_CONTEXT = """Mỗi mục có "k" là vị trí của đoạn trong tài liệu (tên tệp và chuỗi tiêu đề
+chứa nó) và "s" là đoạn văn cần xử lý.
+Dùng "k" để hiểu đoạn đang nói về cái gì: một đoạn tách khỏi mục của nó có thể hiểu theo
+nhiều cách, và chuỗi tiêu đề chính là ngữ cảnh đó. KHÔNG dịch "k", không nhắc lại "k",
+không đưa "k" vào kết quả — chỉ xử lý phần "s"."""
+
 PLACEHOLDER_RULE = """QUY TẮC PLACEHOLDER — vi phạm là hỏng sản phẩm:
 Giữ NGUYÊN VẸN, không dịch, không đổi hoa thường, không thêm bớt khoảng trắng bên trong:
 {{name}} · {name} · {0} · %s · %d · %1$s · %(name)s · %{name} · :name · $t(key) ·
@@ -136,7 +142,7 @@ def system_prompt(kind, glossary=None, register=None, region=None, key_context=F
     if region and region in REGIONS:
         parts.append(REGIONS[region])
     if key_context:
-        parts.append(KEY_CONTEXT)
+        parts.append(DOC_KEY_CONTEXT if kind == "doc" else KEY_CONTEXT)
     if kind == "ui":
         parts.append(UI_CONTEXT)
     elif kind == "doc":
@@ -154,7 +160,8 @@ Khóa là mã định danh — chép lại y hệt, không dịch, không đổi
 Chỉ trả về một đối tượng JSON hợp lệ, không giải thích, không rào ```json."""
 
 DOC_TASK = """Dịch sang tiếng Việt tự nhiên mọi đoạn văn trong đối tượng JSON dưới đây.
-Khóa là số thứ tự — chép lại y hệt. Mỗi giá trị là một khối Markdown.
+Khóa là số thứ tự — chép lại y hệt. Nội dung cần dịch là một khối Markdown.
+Kết quả chỉ gồm khóa số và bản tiếng Việt: {"0": "...", "1": "..."}.
 Chỉ trả về một đối tượng JSON hợp lệ, không giải thích, không rào ```json."""
 
 REVIEW_TASK = """Rà bản tiếng Việt dưới đây, theo đúng bộ quy tắc trên.

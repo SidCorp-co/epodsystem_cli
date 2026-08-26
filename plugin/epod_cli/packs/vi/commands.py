@@ -121,12 +121,16 @@ def cmd_lint(a):
 def cmd_doc(a):
     with open(a.mdfile, encoding="utf-8") as handle:
         pieces = doc_mod.segment(handle.read())
-    slots, items, index_map = [], [], {}
+    trails = doc_mod.heading_trails(pieces, root=os.path.basename(a.mdfile))
+    slots, items, index_map, contexts = [], [], {}, {}
     for index, (kind, block) in enumerate(pieces):
         if kind != "text":
             continue
-        index_map[str(len(items))] = index
-        items.append((str(len(items)), doc_mod.protect_inline(block, slots)))
+        key = str(len(items))
+        index_map[key] = index
+        # Where the block sits, so a paragraph is not translated out of its section.
+        contexts[key] = trails.get(index, "")
+        items.append((key, doc_mod.protect_inline(block, slots)))
     if not items:
         raise CliError("no translatable prose in %s" % a.mdfile)
 
@@ -144,7 +148,7 @@ def cmd_doc(a):
     results, problems = engine.translate_items(
         client, items, kind="doc", task=prompts.DOC_TASK, glossary=glossary,
         temperature=a.temperature, verbose=a.verbose, verify=doc_mod.verify,
-        register=cfg.register(), region=cfg.region())
+        register=cfg.register(), region=cfg.region(), contexts=contexts)
 
     # A block that failed verification keeps its English original, which is already
     # sitting in `pieces`; only the verified ones are replaced.
@@ -171,14 +175,22 @@ def cmd_review(a):
         with open(a.source, encoding="utf-8") as handle:
             pieces = doc_mod.segment(handle.read())
         entries = {str(i): b for i, (kind, b) in enumerate(pieces) if kind == "text"}
+        # The heading above a paragraph is the key path a spec never had.
+        contexts = doc_mod.heading_trails(pieces, root=os.path.basename(a.source))
+        contexts = {str(i): t for i, t in contexts.items()}
     if not entries:
         raise CliError("nothing to review in %s" % a.source)
 
     system = prompts.system_prompt("ui" if is_json else "doc", cfg.glossary(),
-                                   cfg.register(), cfg.region())
+                                   cfg.register(), cfg.region(),
+                                   key_context=not is_json)
     findings = []
     for batch in chunk_items(list(entries.items()), engine.MAX_CHARS, engine.MAX_ITEMS):
-        payload = json.dumps(dict(batch), ensure_ascii=False, indent=2)
+        if is_json:
+            body = dict(batch)
+        else:
+            body = {k: {"k": contexts.get(k, ""), "s": v} for k, v in batch}
+        payload = json.dumps(body, ensure_ascii=False, indent=2)
         answer = parse_json_object(
             client.chat(system, "%s\n\n%s" % (prompts.REVIEW_TASK, payload), temperature=0.2))
         findings.extend(answer.get("findings") or [])
