@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.3
+
+- `skills/epod-vi`: the last paragraph of preamble is gone. The one fact in it
+  that changes what to do — `no gateway key configured` means run
+  `epod vi install` — is a row in the verb table now, where it will actually be
+  read.
+- No behaviour change. Verified live across every use case the system prompts
+  serve: all three registers on UI strings, doc and prose kinds, both regions,
+  glossary pinning and `null`, ICU/positional/named placeholders, i18n key
+  context (`common.buttons.save` → `Lưu` while `billing.save` → `Tiết kiệm`),
+  the bare-CTA gate, and review leading with ambiguity on a sentence that lints
+  clean. Polite `Vui lòng` strings now come back "reads naturally".
+
 ## 2.3.2
 
 - `skills/epod-vi`: 173 lines to 109. Cut the command list that mirrored

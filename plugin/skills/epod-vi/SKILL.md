@@ -14,10 +14,6 @@ description: >-
 Send Vietnamese through `epod vi`; it goes to Gemini with the style contract attached.
 `epod vi --help` lists the verbs, `epod vi <verb> --help` the flags.
 
-Local files only — no store token, no connection, works in a checkout with no `.mcp.json`.
-First run on a machine needs `epod vi install --key <key>`; on `no gateway key configured`,
-ask the user for the key. Read the `epod` skill for project scoping, `epod-docs` for publishing.
-
 ## Pick the verb
 
 | Situation | Do this |
@@ -27,6 +23,7 @@ ask the user for the key. Read the `epod` skill for project scoping, `epod-docs`
 | Gate a build, or sweep before asking Gemini | `epod vi lint file…` (`--strict` exits 1) |
 | A term keeps coming out wrong | add it to `vi.glossary` in `.epod.json`, do not fix each hit |
 | A translation was refused (exit 2) | report the keys, leave them in English |
+| `no gateway key configured` | `epod vi install --key <key>` — ask the user for the key |
 
 `lint` matches phrases the contract names. It cannot tell whether a sentence is readable —
 send that to `review`, and treat a clean `lint` as "nothing tripped", not as a pass.
