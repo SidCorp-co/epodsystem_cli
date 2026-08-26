@@ -10,8 +10,8 @@ import json
 import os
 import sys
 
-from . import (DEFAULT_BASE_URL, DEFAULT_EFFORT, DEFAULT_MODEL, EFFORTS, Settings,
-                save)
+from . import (DEFAULT_BASE_URL, DEFAULT_EFFORT, DEFAULT_MODEL, EFFORTS,
+               EFFORT_BY_VERB, Settings, save)
 from . import cta, doc as doc_mod, engine, lint, locale, placeholders, prompts
 from .client import Client
 from .util import CliError, chunk_items, err, parse_json_object, read_json, write_json
@@ -27,7 +27,8 @@ def add_parser(sub):
     def shared(parser, register=True):
         parser.add_argument("--model", help="gateway model id (default %s)" % DEFAULT_MODEL)
         parser.add_argument("--effort", choices=EFFORTS,
-                            help="reasoning effort (default %s)" % DEFAULT_EFFORT)
+                            help="reasoning effort (default %s, %s for review)"
+                                 % (DEFAULT_EFFORT, EFFORT_BY_VERB["review"]))
         parser.add_argument("--base-url", dest="base_url", help="gateway base url")
         parser.add_argument("--temperature", type=float, default=0.3)
         if register:
@@ -51,7 +52,7 @@ def add_parser(sub):
                      help="gateway base url (default %s)" % DEFAULT_BASE_URL)
     ins.add_argument("--model", help="default model (default %s)" % DEFAULT_MODEL)
     ins.add_argument("--effort", choices=EFFORTS,
-                     help="default reasoning effort (default %s)" % DEFAULT_EFFORT)
+                     help="pin one reasoning effort for every verb; by default\neach verb picks its own")
     ins.add_argument("--no-verify", action="store_true",
                      help="save without asking the gateway whether the key works")
 
@@ -100,6 +101,9 @@ def settings(a):
     opts = {k: getattr(a, k, None) for k in
             ("model", "base_url", "effort", "glossary", "register", "region", "ignore")}
     opts["no_glossary"] = getattr(a, "no_glossary", False)
+    # Which verb is running decides how hard the model should think when
+    # nothing overrides it: see EFFORT_BY_VERB.
+    opts["verb"] = ALIASES.get(getattr(a, "sub", None), getattr(a, "sub", None))
     cfg = Settings(opts)
     return cfg, Client(cfg, verbose=getattr(a, "verbose", False))
 

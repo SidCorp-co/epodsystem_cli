@@ -35,14 +35,16 @@ GLOSSARY_FILE = ".vi-glossary.json"
 DEFAULT_BASE_URL = "https://serp-api.musetools.com/v1"
 DEFAULT_MODEL = "cx/gpt-5.6-luna"
 
-# The gateway accepts `reasoning_effort` and does not validate it — a nonsense
-# value is swallowed rather than rejected, so the choices are enforced here.
-# `high` is the default because every verb in this pack is a judgement call:
-# whether a sentence is ambiguous, whether a label grew an object. The extra
-# reasoning tokens are the point, and `_extract` throws the reasoning away so
-# none of it can reach a locale file.
+
 EFFORTS = ("minimal", "low", "medium", "high")
-DEFAULT_EFFORT = "high"
+# `review` is a judgement call — whether a sentence is ambiguous is exactly
+# the question reasoning is for, and the eval picked this model on that verb.
+# The producing verbs are not: they follow a written contract, and reasoning
+# talks itself out of it. At `--effort high` luna dropped the `quý khách` of
+# `trang-trong` in 4 of 9 samples of one string; at `low`, 3 of 3 kept it.
+# So the default is per verb, and `--effort` still overrides either way.
+EFFORT_BY_VERB = {"review": "high"}
+DEFAULT_EFFORT = "low"
 
 
 def find_up(filename, start=None):
@@ -112,7 +114,8 @@ class Settings:
 
     @property
     def effort(self):
-        value = self._pick("effort", ("VI_NATURAL_EFFORT",), DEFAULT_EFFORT)
+        default = EFFORT_BY_VERB.get(self.opts.get("verb"), DEFAULT_EFFORT)
+        value = self._pick("effort", ("VI_NATURAL_EFFORT",), default)
         if value not in EFFORTS:
             raise CliError("effort must be one of %s, not %r"
                            % (", ".join(EFFORTS), value))

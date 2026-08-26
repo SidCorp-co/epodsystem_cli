@@ -103,6 +103,6 @@ term in English. A `.vi-glossary.json` above the CWD layers on top.
 
 Precedence: flag → environment → `.epod.json` `"vi"` → `~/.config/vi-natural/config.json`
 (0600, written by `epod vi install`, shared with the standalone `vi-natural` CLI). Default
-model `cx/gpt-5.6-luna` at `--effort high` — every verb here is a judgement call, so the
-reasoning is worth paying for. Drop to `--effort low` for a bulk sweep where speed wins,
-or name another model with `--model`.
+model `cx/gpt-5.6-luna`. `review` runs at `--effort high` — judging whether a sentence is
+ambiguous is what reasoning is for — and the producing verbs run at `low`, where they follow
+the contract instead of arguing with it. `--effort` overrides either way.
