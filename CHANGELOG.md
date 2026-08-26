@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.3.0
+
+Two corrections from the product owner, one of them to the style contract itself.
+
+- **`Vui lòng` is ordinary polite Vietnamese and the contract was wrong to ration it.**
+  It said "only for a real request, at most once per screen"; it now says the opposite,
+  that it belongs in a request including inside an error message, and should not be cut
+  for brevity. The `vui lòng` density counter is gone from `lint` — on a 1,264-string
+  Vietnamese-first catalogue it was the only thing the linter had to say, and it was
+  wrong 63 times. The calque `"vui lòng lưu ý rằng" → "lưu ý:"` stays: that is a copy of
+  "please note that", not a polite request.
+- **Clarity is the model's call, not a regex's.** `REVIEW_TASK` now hunts ambiguity
+  first — a sentence you must read twice, clauses that do not say what modifies what, a
+  subject that disappears halfway, one sentence carrying three ideas. That is the defect
+  worth catching and no pattern can see it: the text is grammatical and contains no
+  listed phrase. The skill and README now say plainly that `lint` is a tripwire and
+  `review` is the judge, and that a clean `lint` does not mean the Vietnamese is good.
+
 ## 2.2.2
 
 - `packs/vi/lint.py`: the per-file `vui lòng` and plural-marker counters now

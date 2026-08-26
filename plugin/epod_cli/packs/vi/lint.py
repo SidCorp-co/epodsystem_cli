@@ -62,7 +62,6 @@ _NOMINAL_BEFORE = re.compile(
 _NOMINAL_AFTER = re.compile(
     r"^[\s*_]*(vẫn|bị|là|không|đã|sẽ|có|cũng|phải|luôn|chỉ|khiến|làm|nên|thì)\b",
     re.I | re.U)
-_PLEASE = re.compile(r"\bvui lòng\b", re.I | re.U)
 _PLURAL = re.compile(r"\b(các|những)\b", re.I | re.U)
 
 # Vietnamese only. An English UI string is a missing translation, not a calque.
@@ -161,12 +160,11 @@ def _locale(path):
 def density(text):
     """Whole-file habits: one occurrence is fine, a habit is the tell."""
     words = max(len(text.split()), 1)
-    return {"please": len(_PLEASE.findall(text)),
-            "plural": len(_PLURAL.findall(text)),
+    return {"plural": len(_PLURAL.findall(text)),
             "words": words}
 
 
-def run(paths, max_please=1):
+def run(paths):
     """Print findings for each file. Returns the number of files that had any."""
     dirty = 0
     for path in paths:
@@ -178,9 +176,6 @@ def run(paths, max_please=1):
             findings, stats = _markdown(path)
 
         notes = []
-        if stats["please"] > max_please:
-            notes.append('"vui lòng" %d times — the contract allows one per screen'
-                         % stats["please"])
         # Vietnamese does not mark plural unless the count is the point; one every
         # forty words means the English "the ...s" is being copied across.
         if stats["plural"] * 40 > stats["words"] and stats["plural"] > 2:
@@ -199,7 +194,7 @@ def run(paths, max_please=1):
         for note in notes:
             print("  %-28s style: %s" % ("(whole file)", note))
     if dirty:
-        print("\nThese are the tells a machine leaves. `epod vi review <file>` asks the "
-              "model for a rewrite of each one; `epod vi doc` writes the Vietnamese "
-              "properly in the first place.")
+        print("\nThis check is a tripwire, not a judge: it only knows the phrases the "
+              "contract names. Whether the Vietnamese actually reads clearly is a "
+              "question for `epod vi review <file>`, which asks the model.")
     return dirty

@@ -37,12 +37,21 @@ epod vi translate "Delete this item permanently?"
 epod vi doctor                 # settings, gateway, one live round trip
 ```
 
-## Reach for lint first
+## lint is a tripwire; review is the judge
 
-`lint` costs nothing and needs no network, and most machine-translated Vietnamese fails
-it without a model ever being asked. Its patterns are parsed out of the style contract
-(`packs/vi/prompts.py`) at import time, so the rules the translator is told to obey and
-the rules the linter enforces cannot drift apart.
+Two different questions, and it matters which one you are asking.
+
+`lint` answers *does this text contain a phrase the contract names?* It costs nothing,
+needs no network, and its patterns are parsed out of the style contract
+(`packs/vi/prompts.py`) at import time, so the rules the translator obeys and the rules
+the linter enforces cannot drift apart. What it cannot do is read. A sentence can be
+grammatical, contain no listed calque, pass clean — and still be one nobody can parse on
+the first try. **Regex does not judge Vietnamese.**
+
+`review` answers *does this actually read clearly?* That question goes to the model, and
+it is the one that catches the failure worth catching: the over-stuffed sentence with
+three ideas and no obvious subject. **When someone asks whether Vietnamese is good, run
+`review`, not `lint`, and never substitute your own judgement for either.**
 
 ```bash
 epod vi lint docs/*.vi.md locales/vi.json
@@ -50,13 +59,18 @@ epod vi lint docs/02-SRS.vi.md --strict   # exit 1 when anything is found — fo
 ```
 
 It flags: calques the contract names (`một cách nhanh chóng`, `trong trường hợp`,
-`vui lòng lưu ý rằng`), `được X bởi Y` passives, `sự/việc + verb` nominalization, and —
-per file — `vui lòng` used more than once or plural markers scattered where Vietnamese
+`vui lòng lưu ý rằng`), `được X bởi Y` passives, `sự/việc + verb` nominalization where it
+is padding rather than grammar, and per-file plural markers scattered where Vietnamese
 does not need them. Fenced code, frontmatter and inline code are exempt; English strings
 are skipped, because an untranslated string is a missing translation, not a calque.
 
-When lint fires, `epod vi review <file>` asks the model for a rewrite of each finding.
-`epod vi doc` writes it properly in the first place.
+A clean `lint` means nothing was tripped, **not** that the Vietnamese is good. Run
+`review` for that. `epod vi doc` writes it properly in the first place.
+
+**`Vui lòng` is ordinary polite Vietnamese and belongs in a request — including in an
+error message that asks the reader to do something.** Do not strip it for brevity and do
+not report it as padding. The contract says so, and this is the one place a well-meaning
+edit does visible damage.
 
 ## The docs path
 
@@ -126,7 +140,8 @@ keeps coming out inconsistently, tell the user to add it here rather than fixing
 
 | Trap | What happens | Handling |
 |---|---|---|
-| **Model-written Vietnamese** | reads translated; nobody reviewing notices | never hand-write it — `epod vi doc` / `translate`, and `epod vi lint` before publish |
+| **Model-written Vietnamese** | reads translated; nobody reviewing notices | never hand-write it — `epod vi doc` / `translate`, then `epod vi review` before publish |
+| **Trusting a clean `lint`** | regex knows phrases, not meaning; an unparseable sentence passes it | `lint` is a tripwire. Clarity is `epod vi review`'s call, never yours and never a pattern's |
 | **Key not configured** | `no gateway key configured` | `epod vi install --key <key>` (alias `login`), or `export MUSETOOLS_API_KEY=…`. **Never `.epod.json`** — that file is committed |
 | **Exit code 2** | file written, some strings refused and left in English | read the refused keys out to the user; do not patch them with hand-written Vietnamese |
 | **`--fix` on a human catalog** | a translator's good Vietnamese gets rewritten wordier | `review` without `--fix` first, read the findings; `--fix` is for machine-written files |

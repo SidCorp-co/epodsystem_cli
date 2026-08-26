@@ -43,8 +43,9 @@ NHỮNG LỖI DỊCH MÁY PHẢI TRÁNH (đây là điều quan trọng nhất)
   "có thể được sử dụng để" → "dùng để";  "cho phép bạn có thể" → "cho phép bạn";
   "bao gồm nhưng không giới hạn" → "gồm";  "vui lòng lưu ý rằng" → "lưu ý:";
   "trước khi tiến hành" → "trước khi";  "thực hiện việc X" → "X".
-- "Vui lòng" chỉ dùng khi thật sự nhờ người dùng làm gì, tối đa một lần mỗi màn hình.
-  Không rắc "vui lòng" vào mọi câu.
+- "Vui lòng" là lối nói lịch sự bình thường của tiếng Việt, không phải chữ thừa. Dùng khi câu
+  là lời đề nghị hoặc khi người dùng còn phải làm tiếp một việc gì đó — kể cả trong thông báo
+  lỗi ("Không lưu được. Vui lòng kiểm tra lại các ô đã nhập."). Đừng cắt nó đi cho ngắn.
 - Không dịch chữ-đối-chữ thành ngữ tiếng Anh. Dịch ý, không dịch hình ảnh.
 - Không chèn dấu phẩy theo kiểu tiếng Anh trước "và", không viết "Xin chào, Bạn!".
 
@@ -156,8 +157,14 @@ DOC_TASK = """Dịch sang tiếng Việt tự nhiên mọi đoạn văn trong đ
 Khóa là số thứ tự — chép lại y hệt. Mỗi giá trị là một khối Markdown.
 Chỉ trả về một đối tượng JSON hợp lệ, không giải thích, không rào ```json."""
 
-REVIEW_TASK = """Rà bản tiếng Việt dưới đây và chỉ ra chỗ đọc như dịch máy hoặc sai văn phong
-sản phẩm, theo đúng bộ quy tắc trên.
+REVIEW_TASK = """Rà bản tiếng Việt dưới đây, theo đúng bộ quy tắc trên.
+
+Ưu tiên số một là CÂU TỐI NGHĨA — câu phải đọc lại lần hai mới hiểu, mệnh đề chồng chéo
+không rõ cái gì bổ nghĩa cho cái gì, chủ ngữ biến mất giữa chừng, hoặc một câu gánh ba ý
+lẽ ra phải tách. Đây là lỗi nặng nhất: câu vẫn đúng ngữ pháp nên không công cụ máy móc nào
+bắt được, nhưng người dùng đọc xong không biết màn hình muốn nói gì.
+Sau đó mới đến: đọc như dịch máy, sai văn phong sản phẩm, dùng từ không nhất quán.
+Đừng báo lỗi chỉ để đổi một từ sang từ đồng nghĩa.
 Chỉ trả về JSON hợp lệ dạng:
 {"findings":[{"key":"<khóa hoặc số dòng>","issue":"<lỗi gì, ngắn>","current":"<nguyên văn>","suggested":"<bản viết lại>"}]}
 Bỏ qua câu đã tự nhiên. Không bịa lỗi. Nếu mọi thứ đều ổn, trả {"findings":[]}."""

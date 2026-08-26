@@ -99,10 +99,12 @@ Four things make it more than a `curl` wrapper:
    verbs, the specific calques to delete, which technical terms stay in English. It is
    versioned with the code, so a bad translation is a diff you can argue with rather than a
    prompt someone improvised.
-2. **An offline linter derived from that same contract.** `epod vi lint` parses its patterns
-   out of `STYLE` at import time, so the rules the translator obeys and the rules the linter
-   enforces cannot drift. It costs nothing and catches most machine Vietnamese without a
-   model ever being asked.
+2. **An offline linter derived from that same contract, and an honest account of what it
+   is for.** `epod vi lint` parses its patterns out of `STYLE` at import time, so the rules
+   the translator obeys and the rules the linter enforces cannot drift. It is a tripwire for
+   named phrases, not a judge of Vietnamese: a sentence can pass it clean and still be one
+   no reader parses on the first try. That question goes to `epod vi review`, which asks the
+   model — and it is the question that matters.
 3. **A voice you choose.** `register`: `san-pham` (bạn), `trang-trong` (quý khách),
    `than-mat`. Vietnamese encodes the relationship in the pronouns, and picking wrong is the
    most visible localization error there is.
