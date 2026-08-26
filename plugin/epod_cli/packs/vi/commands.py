@@ -10,7 +10,8 @@ import json
 import os
 import sys
 
-from . import DEFAULT_BASE_URL, DEFAULT_MODEL, Settings, save
+from . import (DEFAULT_BASE_URL, DEFAULT_EFFORT, DEFAULT_MODEL, EFFORTS, Settings,
+                save)
 from . import cta, doc as doc_mod, engine, lint, locale, placeholders, prompts
 from .client import Client
 from .util import CliError, chunk_items, err, parse_json_object, read_json, write_json
@@ -24,7 +25,9 @@ def add_parser(sub):
     s = p.add_subparsers(dest="sub", required=True, metavar="<verb>")
 
     def shared(parser, register=True):
-        parser.add_argument("--model", help="gateway model id (default gm/gemini-3.5-flash)")
+        parser.add_argument("--model", help="gateway model id (default %s)" % DEFAULT_MODEL)
+        parser.add_argument("--effort", choices=EFFORTS,
+                            help="reasoning effort (default %s)" % DEFAULT_EFFORT)
         parser.add_argument("--base-url", dest="base_url", help="gateway base url")
         parser.add_argument("--temperature", type=float, default=0.3)
         if register:
@@ -47,6 +50,8 @@ def add_parser(sub):
     ins.add_argument("--base-url", dest="base_url",
                      help="gateway base url (default %s)" % DEFAULT_BASE_URL)
     ins.add_argument("--model", help="default model (default %s)" % DEFAULT_MODEL)
+    ins.add_argument("--effort", choices=EFFORTS,
+                     help="default reasoning effort (default %s)" % DEFAULT_EFFORT)
     ins.add_argument("--no-verify", action="store_true",
                      help="save without asking the gateway whether the key works")
 
@@ -93,7 +98,7 @@ def run(e, a):
 # ------------------------------------------------------------------ plumbing
 def settings(a):
     opts = {k: getattr(a, k, None) for k in
-            ("model", "base_url", "glossary", "register", "region", "ignore")}
+            ("model", "base_url", "effort", "glossary", "register", "region", "ignore")}
     opts["no_glossary"] = getattr(a, "no_glossary", False)
     cfg = Settings(opts)
     return cfg, Client(cfg, verbose=getattr(a, "verbose", False))
@@ -405,7 +410,7 @@ def cmd_doctor(a):
     print("user config : %s%s"
           % (USER_CONFIG, "" if os.path.exists(USER_CONFIG) else " (absent)"))
     print("base url    : %s" % cfg.base_url)
-    print("model       : %s" % cfg.model)
+    print("model       : %s (effort %s)" % (cfg.model, cfg.effort))
     key = cfg.api_key
     print("api key     : %s…%s" % (key[:6], key[-4:]))
     glossary = cfg.glossary()
@@ -447,7 +452,8 @@ def cmd_install(a):
     if not key:
         raise CliError("no key given")
 
-    values = {"api_key": key, "base_url": a.base_url, "model": a.model}
+    values = {"api_key": key, "base_url": a.base_url, "model": a.model,
+              "effort": a.effort}
     settings_now = Settings({k: v for k, v in values.items() if v})
     if not a.no_verify:
         # A key that does not work is worse than no key: every later command
@@ -460,7 +466,7 @@ def cmd_install(a):
     path = save(values)
     print("saved       : %s (0600)" % path)
     print("key         : %s…%s" % (key[:6], key[-4:]))
-    print("model       : %s" % settings_now.model)
+    print("model       : %s (effort %s)" % (settings_now.model, settings_now.effort))
     print("\nProject voice and vocabulary are separate, and belong in .epod.json:")
     print('  { "vi": { "register": "san-pham", "glossary": { "workspace": null } } }')
     print("\nnext: epod vi doctor")

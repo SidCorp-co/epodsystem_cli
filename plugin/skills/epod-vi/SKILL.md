@@ -103,4 +103,6 @@ term in English. A `.vi-glossary.json` above the CWD layers on top.
 
 Precedence: flag → environment → `.epod.json` `"vi"` → `~/.config/vi-natural/config.json`
 (0600, written by `epod vi install`, shared with the standalone `vi-natural` CLI). Default
-model `gm/gemini-3.5-flash`; reach for a pro model only when tone outweighs turnaround.
+model `cx/gpt-5.6-luna` at `--effort high` — every verb here is a judgement call, so the
+reasoning is worth paying for. Drop to `--effort low` for a bulk sweep where speed wins,
+or name another model with `--model`.

@@ -9,7 +9,7 @@ from .util import CliError
 
 RETRY_STATUS = {408, 409, 429, 500, 502, 503, 504}
 # Cloudflare in front of the gateway rejects the default urllib agent with 1010.
-USER_AGENT = "epod-vi/2.1"
+USER_AGENT = "epod-vi/2.4"
 
 
 class Client:
@@ -21,6 +21,7 @@ class Client:
         self.calls = 0
         self.prompt_tokens = 0
         self.completion_tokens = 0
+        self.reasoning_tokens = 0
 
     def _request(self, path, payload):
         url = self.config.base_url + path
@@ -42,6 +43,9 @@ class Client:
             ],
             "temperature": temperature,
         }
+        effort = getattr(self.config, "effort", None)
+        if effort:
+            payload["reasoning_effort"] = effort
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
         if max_tokens:
@@ -81,6 +85,8 @@ class Client:
         self.calls += 1
         self.prompt_tokens += usage.get("prompt_tokens") or 0
         self.completion_tokens += usage.get("completion_tokens") or 0
+        self.reasoning_tokens += (usage.get("completion_tokens_details")
+                                  or {}).get("reasoning_tokens") or 0
         return content
 
     def models(self):
@@ -97,6 +103,10 @@ class Client:
             raise CliError("cannot reach %s: %s" % (url, exc))
 
     def usage_note(self):
-        return "%d call(s), %d in / %d out tokens" % (
-            self.calls, self.prompt_tokens, self.completion_tokens
-        )
+        # Reasoning tokens are already inside `completion_tokens`; naming them
+        # separately is how you see what raising the effort actually costs.
+        note = "%d call(s), %d in / %d out tokens" % (
+            self.calls, self.prompt_tokens, self.completion_tokens)
+        if self.reasoning_tokens:
+            note += " (%d reasoning)" % self.reasoning_tokens
+        return note

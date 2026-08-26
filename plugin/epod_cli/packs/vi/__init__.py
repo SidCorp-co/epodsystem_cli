@@ -33,7 +33,16 @@ USER_CONFIG = os.path.join(
 GLOSSARY_FILE = ".vi-glossary.json"
 
 DEFAULT_BASE_URL = "https://serp-api.musetools.com/v1"
-DEFAULT_MODEL = "gm/gemini-3.5-flash"
+DEFAULT_MODEL = "cx/gpt-5.6-luna"
+
+# The gateway accepts `reasoning_effort` and does not validate it — a nonsense
+# value is swallowed rather than rejected, so the choices are enforced here.
+# `high` is the default because every verb in this pack is a judgement call:
+# whether a sentence is ambiguous, whether a label grew an object. The extra
+# reasoning tokens are the point, and `_extract` throws the reasoning away so
+# none of it can reach a locale file.
+EFFORTS = ("minimal", "low", "medium", "high")
+DEFAULT_EFFORT = "high"
 
 
 def find_up(filename, start=None):
@@ -100,6 +109,14 @@ class Settings:
     @property
     def model(self):
         return self._pick("model", ("VI_NATURAL_MODEL",), DEFAULT_MODEL)
+
+    @property
+    def effort(self):
+        value = self._pick("effort", ("VI_NATURAL_EFFORT",), DEFAULT_EFFORT)
+        if value not in EFFORTS:
+            raise CliError("effort must be one of %s, not %r"
+                           % (", ".join(EFFORTS), value))
+        return value
 
     def glossary(self):
         """Project terms that outrank the built-in style rules.
