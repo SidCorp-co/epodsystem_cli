@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.2
+
+- `packs/vi/lint.py`: the per-file `vui lòng` and plural-marker counters now
+  count prose only, the way the phrase rules already did. A document *about*
+  interface copy quotes the habit it is describing, in backticks, and was being
+  reported as guilty of it — 14 findings on a review document whose subject was
+  those 14 quotes.
+
 ## 2.2.1
 
 Both fixes come from running `epod vi lint` over a Vietnamese-first codebase —

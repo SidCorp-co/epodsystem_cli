@@ -110,14 +110,19 @@ def _is_padding(text, match):
 def _markdown(path):
     """Prose blocks only: fenced code, frontmatter and inline code are exempt."""
     source = open(path, encoding="utf-8").read()
-    findings, line = [], 1
+    findings, prose, line = [], [], 1
     for kind, block in doc_mod.segment(source):
         if kind == "text":
             slots = []
-            for finding in scan(doc_mod.protect_inline(block, slots), line):
+            masked = doc_mod.protect_inline(block, slots)
+            for finding in scan(masked, line):
                 findings.append(locate(finding, block, line))
+            prose.append(masked)
         line += block.count("\n")
-    return findings, density(source)
+    # Counted over prose only, for the same reason the phrase rules are: a
+    # document *about* interface copy quotes the habit it is describing, and
+    # counting those quotes reports the document as guilty of them.
+    return findings, density("\n".join(prose))
 
 
 def locate(finding, block, start_line):
