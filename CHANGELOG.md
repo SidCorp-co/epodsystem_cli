@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.2
+
+- `skills/epod-vi`: 173 lines to 109. Cut the command list that mirrored
+  `epod vi --help` and the opening that argued for the tool instead of using it.
+  A skill says what to do; the CLI's own help says what the flags are, and the
+  reasoning belongs in the README.
+- What replaced them: a "Pick the verb" table keyed by situation. Reading it
+  answers which command to run, which is the question a skill is opened with.
+
 ## 2.3.1
 
 - `skills/epod-vi`: rewritten in the voice a skill should have. It had drifted
