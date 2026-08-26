@@ -27,11 +27,10 @@ epod docs doctor                      # can this store render a doc page at all?
   loses manual edits and resets anchors.
 - **Stand up a docs site (fresh store):** `epod docs doctor` → `install` → `epod docs build`
   each doc → `epod docs nav` → `epod docs home` → browser-verify.
-- **Vietnamese content: never hand-write it.** A .md going up in Vietnamese goes through
-  `epod vi` first — `epod vi lint file.vi.md` is free and offline, `epod vi doc file.md`
-  writes it, `epod vi review` rewrites what lint flags. Then `epod docs build`. Model-written
-  Vietnamese publishes clean and reads translated, and nobody reviewing the build catches it.
-  Full workflow: skill `epod-vi`.
+- **Vietnamese content goes through `epod vi` first.** `epod vi doc file.md` writes it and
+  `epod vi review file.vi.md` asks Gemini to read it back, and then `epod docs build`.
+  Vietnamese written any other way publishes clean and reads translated, which nobody
+  reviewing the build can see. Full workflow: skill `epod-vi`.
 - **After `sync`, always `git diff` the .md.** md2doc preserves `###` levels and list blocks
   via `data-md-level`, but only for HTML built by the *current* md2doc — a page last written
   by an older version round-trips back with headings demoted and lists split into loose

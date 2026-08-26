@@ -11,81 +11,89 @@ description: >-
 
 # Skill: epod-vi
 
-**Do not write the Vietnamese yourself.** Route it through `epod vi`.
+Vietnamese here goes through `epod vi`, which hands it to Gemini with a written style
+contract attached. It is worth the extra step for a reason that is easy to miss.
 
-A model asked in passing for Vietnamese returns Vietnamese that parses, publishes and
-reads like a machine — `sự thay đổi của bạn đã được lưu lại một cách thành công`. The
-failure is invisible to everyone reviewing the build who does not read Vietnamese: the
-page is 200, the JSON is valid, the tiếng Việt is just wrong in register. Vietnamese
-typed straight into an edit gets no style contract, no placeholder gate and no review.
+Vietnamese typed straight into an edit parses, publishes, and reads like a machine —
+`sự thay đổi của bạn đã được lưu lại một cách thành công`. Everyone reviewing the build
+sees a 200 and valid JSON, so nothing looks wrong. Only a Vietnamese reader notices, and
+usually after it has shipped. Routing through the CLI attaches the style contract, the
+placeholder gate and the model's own read of the sentence, none of which an edit gets.
 
-`epod vi` needs no store token and never opens a connection — it works in a checkout
-with no `.mcp.json`, on local files only. It does need its own credential, once per
-machine: `epod vi install --key <key>` stores the gateway endpoint and key at 0600 and
-verifies both against the gateway before writing. Every other `epod` group works without
-it. If a command answers `no gateway key configured`, that is the fix — ask the user for
-the key rather than writing the Vietnamese yourself. Read the `epod` skill for project scoping;
-`epod-docs` owns the publish workflow this feeds.
+`epod vi` works on local files only — no store token, no connection, happy in a checkout
+with no `.mcp.json`. It does want its own credential once per machine:
+`epod vi install --key <key>` stores the gateway endpoint and key at 0600 and checks them
+against the gateway first. If a command answers `no gateway key configured`, the key is
+worth asking the user for; the rest of `epod` carries on fine without it. The `epod` skill
+covers project scoping, and `epod-docs` owns the publishing this feeds into.
 
 ```bash
 epod vi install --key <key>    # once per machine: the gateway endpoint and key
-epod vi lint  <file...>        # FREE, offline: the tells a machine leaves
+epod vi review guide.vi.md     # ask Gemini: does this read like Vietnamese?
 epod vi doc   guide.md         # → guide.vi.md, code/links/structure untouched
-epod vi review guide.vi.md     # ask the model where existing Vietnamese reads translated
+epod vi lint  <file...>        # free, offline: named phrases only, no judgement
 epod vi i18n  locales/en.json  # → locales/vi.json, missing keys only
 epod vi translate "Delete this item permanently?"
 epod vi doctor                 # settings, gateway, one live round trip
 ```
 
-## lint is a tripwire; review is the judge
+## Two questions, two tools
 
-Two different questions, and it matters which one you are asking.
+It helps to know which question is on the table.
 
-`lint` answers *does this text contain a phrase the contract names?* It costs nothing,
-needs no network, and its patterns are parsed out of the style contract
-(`packs/vi/prompts.py`) at import time, so the rules the translator obeys and the rules
-the linter enforces cannot drift apart. What it cannot do is read. A sentence can be
-grammatical, contain no listed calque, pass clean — and still be one nobody can parse on
-the first try. **Regex does not judge Vietnamese.**
-
-`review` answers *does this actually read clearly?* That question goes to the model, and
-it is the one that catches the failure worth catching: the over-stuffed sentence with
-three ideas and no obvious subject. **When someone asks whether Vietnamese is good, run
-`review`, not `lint`, and never substitute your own judgement for either.**
+**"Does this read like Vietnamese?"** — that one goes to Gemini, through
+`epod vi review`. It is the question that matters, and the model is the only thing here
+that can answer it. What it catches is the sentence carrying three ideas with no clear
+subject, the clause where nothing says what modifies what, the phrase that has to be read
+twice. Those sentences are grammatical and contain no suspicious phrase, so nothing
+mechanical will ever flag them.
 
 ```bash
-epod vi lint docs/*.vi.md locales/vi.json
-epod vi lint docs/02-SRS.vi.md --strict   # exit 1 when anything is found — for CI
+epod vi review docs/02-SRS.vi.md      # findings with a suggested rewrite for each
+epod vi review locales/vi.json --json # machine-readable, good for collecting
+epod vi review locales/vi.json --fix  # applies them (JSON only, placeholder-checked)
 ```
 
-It flags: calques the contract names (`một cách nhanh chóng`, `trong trường hợp`,
-`vui lòng lưu ý rằng`), `được X bởi Y` passives, `sự/việc + verb` nominalization where it
-is padding rather than grammar, and per-file plural markers scattered where Vietnamese
-does not need them. Fenced code, frontmatter and inline code are exempt; English strings
-are skipped, because an untranslated string is a missing translation, not a calque.
+**"Does this contain a phrase the contract names?"** — that is `epod vi lint`, which is
+free, offline and quite literal. It knows calques the contract lists (`một cách nhanh
+chóng`, `trong trường hợp`, `vui lòng lưu ý rằng`), `được X bởi Y` passives,
+`sự/việc + verb` where it pads rather than does grammatical work, and plural markers
+scattered where Vietnamese does not need them. Fenced code, frontmatter and inline code
+are skipped, and so are English strings — an untranslated string is a missing translation,
+not a calque.
 
-A clean `lint` means nothing was tripped, **not** that the Vietnamese is good. Run
-`review` for that. `epod vi doc` writes it properly in the first place.
+Its patterns are parsed out of the style contract (`packs/vi/prompts.py`) at import time,
+so the rules Gemini is given and the rules the linter checks stay in step. It is a
+tripwire, and a useful one in CI (`--strict` exits 1 on a finding). It just cannot read,
+so a clean result means nothing tripped rather than that the Vietnamese is good — the
+model's read is still the one to get.
 
-**`Vui lòng` is ordinary polite Vietnamese and belongs in a request — including in an
-error message that asks the reader to do something.** Do not strip it for brevity and do
-not report it as padding. The contract says so, and this is the one place a well-meaning
-edit does visible damage.
+## Wrong / Right
+
+The four places a well-meant edit does real damage.
+
+| | Wrong | Right |
+|---|---|---|
+| **Producing Vietnamese** | typing it into the edit, or translating it in your head | `epod vi doc`, `epod vi translate`, `epod vi i18n` |
+| **Judging Vietnamese** | reading it yourself, or reporting a clean `lint` as a pass | `epod vi review` — Gemini decides, not you and not a pattern |
+| **`Vui lòng`** | stripping it for brevity, or reporting it as padding | leave it. It is ordinary polite Vietnamese and belongs in a request, error messages included |
+| **A refused string (exit 2)** | patching the gap with hand-written Vietnamese | read the refused keys out to the user and leave them in English |
 
 ## The docs path
 
 ```bash
 epod vi doc docs/02-SRS.md            # → docs/02-SRS.vi.md
-epod vi lint docs/02-SRS.vi.md        # confirm before it goes live
+epod vi review docs/02-SRS.vi.md      # Gemini reads it before anyone else does
 epod docs build docs/02-SRS.vi.md --slug srs-vi
 ```
 
 Fenced code, frontmatter, inline code spans, link targets, heading levels and blank-line
-structure pass through byte-identical; only prose is translated. A block whose structure
-would change is refused and keeps its English — exit code 2, with the block reported.
-Frontmatter *values* are never translated; edit a title by hand.
+structure come through byte-identical; only prose is translated. A block whose structure
+would change is refused and keeps its English — exit code 2, with the block named.
+Frontmatter *values* are left alone, so a title that needs translating is a hand edit.
 
-For Vietnamese already published, `epod docs sync <id> file.md` first, then lint the .md.
+For Vietnamese that is already published, `epod docs sync <id> file.md` brings it back
+down first, and then it is an ordinary file to review.
 
 ## Locale files
 
@@ -95,23 +103,23 @@ epod vi i18n locales/en.json --check    # offline audit, no API calls, CI-safe
 epod vi i18n locales/en.json --overwrite --keys billing,common
 ```
 
-`--check` reports missing keys, damaged placeholders, stale keys, and **call-to-action
-discipline**: *inflated* (English `Remove`, Vietnamese `Xóa tỷ giá` — a reusable button
+`--check` reports missing keys, damaged placeholders, stale keys, and call-to-action
+discipline: *inflated* (English `Remove`, Vietnamese `Xóa tỷ giá` — a reusable button that
 became a one-screen button) and *collapse* (N keys saying `Tạo <object>` where one shared
-`common.create` = `Tạo` would serve). Translation enforces the same rule going forward:
-a bare English CTA that comes back with an object is retried once, then refused. One
-`Lưu` works on every form; a per-entity label needs its own key and drifts from its
-siblings the first time someone edits one.
+`common.create` = `Tạo` would serve). Translation holds the same line going forward: a
+bare English CTA that comes back carrying an object is retried once, then refused. One
+`Lưu` works on every form, while a per-entity label needs its own key and drifts from its
+siblings the first time someone edits one of them.
 
-Every translated string is compared against its source for placeholders — `{{name}}`,
-`{name}`, `%s`, `%1$s`, `%(name)s`, `:name`, ICU plurals, HTML tags. A string that loses
-or renames one never reaches the file.
+Every translated string is checked against its source for placeholders — `{{name}}`,
+`{name}`, `%s`, `%1$s`, `%(name)s`, `:name`, ICU plurals, HTML tags. One that loses or
+renames a placeholder never reaches the file.
 
-A string that talks *about* brace syntax ("a `{` is never closed by a `}`") parses as an
-interpolation and gets refused. Exempt those keys rather than hand-editing around them:
-`--ignore 'codePatterns.*'`, or `vi.ignore` in `.epod.json`.
+A string that talks *about* brace syntax ("a `{` is never closed by a `}`") looks like an
+interpolation and gets refused. Exempting those keys is tidier than hand-editing around
+them: `--ignore 'codePatterns.*'`, or `vi.ignore` in `.epod.json`.
 
-## Voice — pick once per project
+## Voice — worth picking once per project
 
 ```json
 {
@@ -124,28 +132,28 @@ interpolation and gets refused. Exempt those keys rather than hand-editing aroun
 }
 ```
 
-`.epod.json`, beside the project's `.mcp.json`. `san-pham` (default, says **bạn**) is
-right for almost every app; `trang-trong` (**quý khách**) for commerce, invoices, legal
-and transactional email; `than-mat` for marketing and onboarding. Getting the pronoun
-pair wrong is the single most visible localization mistake in Vietnamese — `bạn` in an
-invoice reads careless, `quý khách` in a dev tool reads stiff. `--register` overrides for
-one run. A `.vi-glossary.json` found above the CWD layers on top of `vi.glossary`, so a
-docs subtree can pin a term the whole project does not.
+`.epod.json`, beside the project's `.mcp.json`. `san-pham` (the default, says **bạn**)
+suits almost every app; `trang-trong` (**quý khách**) fits commerce, invoices, legal and
+transactional email; `than-mat` is for marketing and onboarding. The pronoun pair is the
+most visible localization choice in Vietnamese — `bạn` in an invoice reads careless,
+`quý khách` in a dev tool reads stiff — so it is a good thing to settle early.
+`--register` overrides for a single run, and a `.vi-glossary.json` above the CWD layers on
+top of `vi.glossary` when a docs subtree needs a term the rest of the project does not.
 
-In the glossary, `null` means "leave this word in English". Glossary entries outrank the
-built-in style rules — this is how a project pins its own product vocabulary. When a term
-keeps coming out inconsistently, tell the user to add it here rather than fixing each hit.
+In the glossary, `null` keeps a word in English. Glossary entries outrank the built-in
+style rules, which is how a project pins its own vocabulary — and it is what keeps
+`review` from offering to replace domain terms with plainer everyday words. When a term
+keeps coming out inconsistently, the glossary is a better answer than fixing each hit, so
+it is worth mentioning to the user.
 
 ## Traps
 
 | Trap | What happens | Handling |
 |---|---|---|
-| **Model-written Vietnamese** | reads translated; nobody reviewing notices | never hand-write it — `epod vi doc` / `translate`, then `epod vi review` before publish |
-| **Trusting a clean `lint`** | regex knows phrases, not meaning; an unparseable sentence passes it | `lint` is a tripwire. Clarity is `epod vi review`'s call, never yours and never a pattern's |
-| **Key not configured** | `no gateway key configured` | `epod vi install --key <key>` (alias `login`), or `export MUSETOOLS_API_KEY=…`. **Never `.epod.json`** — that file is committed |
-| **Exit code 2** | file written, some strings refused and left in English | read the refused keys out to the user; do not patch them with hand-written Vietnamese |
-| **`--fix` on a human catalog** | a translator's good Vietnamese gets rewritten wordier | `review` without `--fix` first, read the findings; `--fix` is for machine-written files |
-| **Register ignored in a doc** | doc tone used to hard-code `bạn` | fixed — the VĂN PHONG block wins. Verify with `epod vi doctor`, which prints the active voice |
+| **Key not configured** | `no gateway key configured` | `epod vi install --key <key>` (alias `login`), or `export MUSETOOLS_API_KEY=…`. Not `.epod.json` — that file is committed |
+| **`--fix` on a human catalogue** | a translator's good Vietnamese comes back wordier | run `review` without `--fix` first and read the findings; `--fix` earns its place on machine-written files |
+| **`review` flattens domain words** | it offers `thêm` for `khai`, plain words for accounting terms | pin them in `vi.glossary` before a large run, and the noise goes away |
+| **Register ignored in a doc** | doc tone used to hard-code `bạn` | fixed — the VĂN PHONG block wins. `epod vi doctor` prints the active voice |
 
 ## Exit codes
 
@@ -156,10 +164,10 @@ keeps coming out inconsistently, tell the user to add it here rather than fixing
 
 `epod vi install` writes the endpoint, key and default model to
 `~/.config/vi-natural/config.json` (0600, shared with the standalone `vi-natural` CLI);
-`--base-url` and `--model` override the defaults, `--no-verify` skips the gateway check.
-Voice and vocabulary are deliberately not stored there — they are project-shaped and
-belong in `.epod.json`.
+`--base-url` and `--model` override the defaults, and `--no-verify` skips the gateway
+check. Voice and vocabulary are kept out of that file on purpose — they are
+project-shaped, so they live in `.epod.json`.
 
 Precedence: flag → environment → `.epod.json` `"vi"` → `~/.config/vi-natural/config.json`.
-Default model `gm/gemini-3.5-flash`; `--model` overrides per run, and a pro model is worth
-it only for marketing copy or a long document where tone outweighs turnaround.
+The default model is `gm/gemini-3.5-flash`; `--model` overrides per run, and a pro model
+earns its cost mainly on marketing copy or a long document where tone outweighs turnaround.

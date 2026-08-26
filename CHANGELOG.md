@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.3.1
+
+- `skills/epod-vi`: rewritten in the voice a skill should have. It had drifted
+  into barked prohibitions — "Do not write the Vietnamese yourself", "Regex does
+  not judge Vietnamese", "never substitute your own judgement" — which is a tone
+  that reads as scolding and buries the reasoning that makes a rule stick. The
+  explanation is now friendly and the hard edges live in one **Wrong / Right**
+  table, which is where a flat statement belongs.
+- Every "is this good?" path now points at Gemini. The docs workflow ended on
+  `epod vi lint`, which cannot answer that question; it ends on `epod vi review`,
+  and `review` leads the command list while `lint` is described as what it is —
+  named phrases, no judgement.
+- New trap row: `review` flattening domain vocabulary, and the glossary as the
+  fix. Same softening applied to the Vietnamese step in `skills/epod-docs`.
+
 ## 2.3.0
 
 Two corrections from the product owner, one of them to the style contract itself.
