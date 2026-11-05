@@ -1,3 +1,13 @@
+> **Archived (2026-11-05).** This repository is no longer maintained. The epod CLI is now one
+> binary built and served by the epod platform itself. Install it with
+>
+> ```sh
+> curl -fsSL https://epodsystem.com/cli/install.sh | sh        # macOS, Linux
+> irm https://epodsystem.com/cli/install.ps1 | iex             # Windows PowerShell
+> ```
+>
+> then run `epod login`. `epod --help` lists what it does.
+
 # epod — a CLI for the epod platform, packaged as a Claude Code plugin
 
 `epod` drives an epod store from the terminal: a Shopify-like platform of CMS pages, a Liquid
